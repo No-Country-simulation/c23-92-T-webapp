@@ -114,15 +114,16 @@ La aplicación estará disponible en: [http://127.0.0.1:5000](http://127.0.0.1:5
 
 ## Estructura del proyecto
 ```plaintext
-c23-92-T-webapp/backend/
-├── app.py              # Archivo principal del servidor Flask
-├── models.py           # Definición de modelos de base de datos
-├── migrations/         # Carpeta generada por Flask-Migrate para las migraciones
-├── requirements.txt    # Lista de dependencias del proyecto
-├── .env.example        # Plantilla para variables de entorno
-├── .env                # Variables de entorno sensibles (ignorado por Git)
-├── .flaskenv           # Configuración para desarrollo
-└── README.md           # Instrucciones del proyecto
+c23-92-T-webapp/
+    ├── .env.example        # Plantilla para variables de entorno
+    ├── .env                # Variables de entorno sensibles (ignorado por Git)
+    ├── .flaskenv           # Configuración para desarrollo
+    └── backend/
+        ├── app.py              # Archivo principal del servidor Flask
+        ├── models.py           # Definición de modelos de base de datos
+        ├── migrations/         # Carpeta generada por Flask-Migrate para las migraciones
+        ├── requirements.txt    # Lista de dependencias del proyecto
+        └── README.md           # Instrucciones del proyecto
 ```
 
 ---
