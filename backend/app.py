@@ -21,7 +21,7 @@ migrate = Migrate(app, db)
 
 
 # Importar los modelos después de inicializar db
-from models import User
+# from models import User
 
 
 @app.get("/api")
