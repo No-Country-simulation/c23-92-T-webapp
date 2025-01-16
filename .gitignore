@@ -1,2 +1,25 @@
 .env
 .flaskenv
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environment
+env/
+venv/
+*.env
+*.venv
+*.env.bak
+*.venv.bak
+
+# IDE settings
+.idea/
+.vscode/
+
+# Logs
+*.log
+
+# Ignore migrations
+migrations/

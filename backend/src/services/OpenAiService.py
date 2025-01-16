@@ -3,34 +3,48 @@ from decouple import config
 from src.utils.Logger import Logger
 import os
 from dotenv import load_dotenv
+from src.models.Interactions import Interactions
+from src.repositories.InteractionsRepository import InteractionsRepository
 
-# Cargar variables de entorno
+
 load_dotenv()
 
 class OpenAIService:
-    # Crear instancia del cliente OpenAI
-    client = OpenAI(
-        api_key=os.getenv("OPENAI_API_KEY")
-    )
 
-    @classmethod
-    def response(cls, content):
+
+    def __init__(self, interactions_repository: InteractionsRepository, client):
+        self.interactions_repository = interactions_repository
+        self.client = client
+
+   
+    def response(self, content):
         try:
-            # Llamada al modelo de OpenAI usando la instancia del cliente
-            response = cls.client.chat.completions.create(
+            if not content:
+                return {"error": "Not content"}
+
+            response = self.client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
-                    {"role": "system", "content": "Actúa como un consejero emocional y motivador."},
+                    {"role": "system", "content": "Actúa como un consejero emocional y motivador"},
                     {"role": "user", "content": content},
                 ],
-                max_tokens=350,
+                max_tokens=200,
                 temperature=0.7
             )
 
-            # Acceder al contenido del mensaje
-            return response.choices[0].message.content
+
+            if not response:
+                return {"error": "Not reponse"}
+            
+            responseReceived = str(response.choices[0].message.content)
+
+            interaction = Interactions(content=content, response=responseReceived)
+
+            self.interactions_repository.add(interaction)
+
+            return responseReceived
 
         except Exception as ex:
-            # Manejo de errores con logging
+           
             Logger.add_to_log("error", f"Error al procesar la solicitud en OpenAIService: {ex}")
             raise ex

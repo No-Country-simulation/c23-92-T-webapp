@@ -1,6 +1,7 @@
 from flask import Flask, jsonify
 from extensions import db, migrate
 from src.routes.AuthRoutes import auth_routes
+from src.routes.OpenAiRoutes import interactions_bp
 from dotenv import load_dotenv
 import os
 
@@ -21,6 +22,7 @@ def create_app():
 
     # Importar los modelos después de inicializar db
     app.register_blueprint(auth_routes, url_prefix='/api/auth')
+    app.register_blueprint(interactions_bp)
 
     @app.get("/api")
     def home():
