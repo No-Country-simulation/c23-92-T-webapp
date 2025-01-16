@@ -1,5 +1,5 @@
-from decouple import config
-
+import os
+from dotenv import load_dotenv
 import datetime
 import jwt
 import pytz
@@ -8,10 +8,12 @@ import traceback
 # Logger
 from src.utils.Logger import Logger
 
+load_dotenv()
 
 class Security():
 
-    secret = config('JWT_KEY')
+    secret = os.getenv("SECRET_KEY")
+    refresh_secret = os.getenv("REFRESH_SECRET_KEY")
     default_tz = pytz.timezone("America/New_York") # Default timezone
     tz = default_tz
 
@@ -35,14 +37,15 @@ class Security():
             payload = {
                 'iat': datetime.datetime.now(tz=cls.tz),
                 'exp': datetime.datetime.now(tz=cls.tz) + datetime.timedelta(hours=2),
+                'id': str(authenticated_user.id),
                 'username': authenticated_user.username,
-                'fullname': authenticated_user.fullname,
             }
             access_token = jwt.encode(payload, cls.secret, algorithm="HS256")
 
             refresh_payload = {
                 'iat': datetime.datetime.now(tz=cls.tz),
                 'exp': datetime.datetime.now(tz=cls.tz) + datetime.timedelta(days=30),
+                'id': str(authenticated_user.id),
                 'username': authenticated_user.username,
             }
             refresh_token = jwt.encode(refresh_payload, cls.refresh_secret, algorithm="HS256")
