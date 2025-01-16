@@ -89,7 +89,33 @@ flask db migrate -m "Descripción de los cambios"
 flask db upgrade
 ```
 
----
+## Generacion de claves secretas para iniciar la aplicacion
+
+### 1. Ejecutar el script `secret_key.py`.
+- Tienes que estar en el directorio `/backend`
+**Linux/MacOS:**
+```bash
+python3 secret_key.py
+```
+
+**Windows:**
+```bash
+python secret_key.py
+```
+
+### 2. Copiar las llaves generadas 
+Copiar solo `SECRET_KEY_GENERADA` y `REFRESH_SECRET_KEY_GENERADA`
+```plaintext
+Generated SECRET_KEY: SECRET_KEY_GENERADA
+Generated REFRESH_SECRET_KEY: REFRESH_SECRET_KEY_GENERADA
+```
+
+### 3. Pegarlos en el archivo `.env` del proyecto
+Pegar en las variables correspondientes
+```plaintext
+SECRET_KEY=SECRET_KEY_GENERADA
+REFRESH_SECRET_KEY=REFRESH_SECRET_KEY_GENERADA
+```
 
 ## Ejecutar la aplicación
 
@@ -120,10 +146,19 @@ c23-92-T-webapp/
     ├── .flaskenv           # Configuración para desarrollo
     └── backend/
         ├── app.py              # Archivo principal del servidor Flask
-        ├── models.py           # Definición de modelos de base de datos
+        |-- extensions.py       # Dependencias importadas para la base de datos
+        |-- secret_key.py       # Script para generar secret keys
         ├── migrations/         # Carpeta generada por Flask-Migrate para las migraciones
         ├── requirements.txt    # Lista de dependencias del proyecto
-        └── README.md           # Instrucciones del proyecto
+        |── README.md           # Instrucciones del proyecto
+        |-- src/                # Carpeta src donde se aloja el código fuente del proyecto backend.
+            |-- models/         # Carpeta donde se alojan los modelos para la base de datos
+            |-- repositories/   # Carpeta donde se alojan los repositorios para la interaccion con la base de datos
+            |-- routes/         # Carpeta donde se alojan las rutas de cada entidad del proyecto
+            |-- services/       # Carpeta donde se alojan los servicios del proyecto
+            |-- tests/          # Carpeta para testing
+            |-- utils/          # Carpeta de utilidades
+
 ```
 
 ---
