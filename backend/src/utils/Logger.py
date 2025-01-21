@@ -19,7 +19,9 @@ class Logger():
         formatter = logging.Formatter('%(asctime)s | %(levelname)s | %(message)s', "%Y-%m-%d %H:%M:%S")
         file_handler.setFormatter(formatter)
 
-        if (logger.hasHandlers()):
+        if logger.hasHandlers():
+            for handler in logger.handlers:
+                handler.close()
             logger.handlers.clear()
 
         logger.addHandler(file_handler)
