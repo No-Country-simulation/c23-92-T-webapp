@@ -1,50 +1,64 @@
-from openai import OpenAI
-from decouple import config
 from src.utils.Logger import Logger
-import os
 from dotenv import load_dotenv
-from src.models.Interactions import Interactions
-from src.repositories.InteractionsRepository import InteractionsRepository
+from src.services.InteractionsService import InteractionsService
 
 
 load_dotenv()
 
 class OpenAIService:
+    EMOTIONAL_STATES = {
+        1: 'Feliz',
+        2: 'Disgustado o Tenso',
+        3: 'Triste',
+        4: 'Enojado',
+        5: 'Relajado o Cansado'
+    }
 
-
-    def __init__(self, interactions_repository: InteractionsRepository, client):
-        self.interactions_repository = interactions_repository
+    def __init__(self, client):
+        self.interactions_service = InteractionsService()
         self.client = client
 
-   
-    def response(self, content):
+
+    def response(self, user_id, state, content):
         try:
             if not content:
                 return {"error": "Not content"}
+            
+            emotional_state = self.EMOTIONAL_STATES.get(state, 'Desconocido')
 
             response = self.client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
-                    {"role": "system", "content": "Actúa como un consejero emocional y motivador"},
+                    {"role": "system", "content": f"Actúa como un consejero emocional y motivador. El usuario se siente {emotional_state}. Adapta tu respuesta considerando su estado emocional actual."},
                     {"role": "user", "content": content},
                 ],
                 max_tokens=200,
                 temperature=0.7
             )
 
-
             if not response:
                 return {"error": "Not reponse"}
             
-            responseReceived = str(response.choices[0].message.content)
+            response_received = str(response.choices[0].message.content)
 
-            interaction = Interactions(content=content, response=responseReceived)
+            title_response = self.client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": "Genera un título corto y conciso (máximo 6 palabras) que resuma la siguiente interacción. Responde SOLO con el título, sin explicaciones adicionales."},
+                    {"role": "user", "content": f"Usuario ({emotional_state}): {content}\nRespuesta: {response_received}"},
+                ],
+                max_tokens=20,
+                temperature=0.7
+            )
 
-            self.interactions_repository.add(interaction)
+            title = str(title_response.choices[0].message.content).strip()
 
-            return responseReceived
-
+            self.interactions_service.create_interaction(user_id=user_id, title=title, state=state, content=content, response=response_received)
+            
+            return {
+                "title": title,
+                "response": response_received
+            }
         except Exception as ex:
-           
             Logger.add_to_log("error", f"Error al procesar la solicitud en OpenAIService: {ex}")
             raise ex
