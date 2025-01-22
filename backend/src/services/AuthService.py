@@ -1,12 +1,13 @@
 import traceback
 from src.utils.Logger import Logger
-from src.models.UserModel import User
+from src.models.User import User
 from src.repositories.UserRepository import UserRepository
+import pytz
 
 
 class AuthService():
-    def __init__(self, user_repository: UserRepository):
-        self.user_repository = user_repository
+    def __init__(self):
+        self.user_repository = UserRepository()
 
     def login_user(self, username, password):
         try:
@@ -20,7 +21,7 @@ class AuthService():
             return None
         
 
-    def register_user(self, username, email, password):
+    def register_user(self, username, email, password, timezone="UTC"):
         try:
             if not username or not password:
                 return {'error': 'Username and password are required'}
@@ -34,7 +35,10 @@ class AuthService():
             if self.user_repository.get_user_by_email(email):
                 return {'error': 'Email already exists'}
             
-            user = User(username=username, email=email, password=password)
+            if timezone not in pytz.all_timezones:
+                return {'error': 'Invalid timezone'}
+            
+            user = User(username=username, email=email, password=password, timezone=timezone)
             self.user_repository.add(user)
             return {'success': True, 'message': 'User created'}
         except Exception as ex:
