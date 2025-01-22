@@ -56,12 +56,12 @@
         const responseContainer = document.getElementById("response-container");
         let currentResponse = "";
 
-        // Connect handler
+        // Para probar conexión. Borrar después
         socket.on('connect', () => {
             console.log('Connected to server');
         });
 
-        // Handle send button click
+        // handle send
         document.getElementById("send").addEventListener("click", () => {
             const messageInput = document.getElementById("message");
             const message = messageInput.value.trim();

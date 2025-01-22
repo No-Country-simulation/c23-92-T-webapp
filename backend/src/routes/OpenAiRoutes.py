@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, render_template
 from src.services.OpenAiService import OpenAIService
 from src.repositories.InteractionsRepository import InteractionsRepository
 from openai import OpenAI
@@ -6,7 +6,6 @@ import os
 from dotenv import load_dotenv
 from flask_socketio import SocketIO, emit
 from extensions import socketio
-
 
 
 load_dotenv()
@@ -20,41 +19,14 @@ client = OpenAI(
 interactions_repository = InteractionsRepository()
 openai_service = OpenAIService(interactions_repository, client)
 
-@interactions_bp.route('/create', methods=['POST'])
-def create_interaction():
-    try:
-        data = request.get_json()
+@interactions_bp.route('/new', methods=['GET'])
+def new_interaction():
+    return render_template("testSocket.html")
 
-        content = data.get("content")
-
-        print(content)
-
-        if not content:
-            return jsonify({"error" : "Content is required"}), 400
-
-        # falta agregar toda la logica del journal
-
-
-        response = openai_service.response(content)
-
-        if(response):
-            return response, 201
-        else:
-            return jsonify({
-                "error": "error"
-            }), 400
-
-    except Exception as ex:
-        return jsonify({"error": f"error: {str(ex)}"}), 500
-
-
+# Para probar la conexión únicamente. Borrar luego
 @socketio.on('connect')
 def handle_connect():
     emit('connection_response', {'data': 'Connected successfully'})
-
-@socketio.on('disconnect')
-def handle_disconnect():
-    print('Client disconnected')
 
 
 @socketio.on('generate_interaction')
@@ -82,6 +54,29 @@ def handle_generate_interaction(data):
             "status": "error"
         })
 
+# @interactions_bp.route('/create', methods=['POST'])
+# def create_interaction():
+#     try:
+#         data = request.get_json()
 
-#La ruta generate interaction no debería ser "/"
-#Testing positivo y negativo
+#         content = data.get("content")
+
+#         print(content)
+
+#         if not content:
+#             return jsonify({"error" : "Content is required"}), 400
+
+#         # falta agregar toda la logica del journal
+
+
+#         response = openai_service.response(content)
+
+#         if(response):
+#             return response, 201
+#         else:
+#             return jsonify({
+#                 "error": "error"
+#             }), 400
+
+#     except Exception as ex:
+#         return jsonify({"error": f"error: {str(ex)}"}), 500

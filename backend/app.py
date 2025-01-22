@@ -37,7 +37,7 @@ def create_app():
 
     @app.get("/")
     def home():
-        return render_template("testSocket.html")
+        return "hello"
 
     return app
 
