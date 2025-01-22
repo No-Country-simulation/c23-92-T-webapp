@@ -1,11 +1,9 @@
 from flask import Flask, jsonify, render_template
 from extensions import db, migrate, socketio
-from flask import Flask, jsonify
 from src.routes.AuthRoutes import auth_routes
 from src.routes.OpenAiRoutes import interactions_bp
 from src.routes.TokenRoutes import token_routes
 from dotenv import load_dotenv
-from extensions import db
 import os
 from flask_socketio import SocketIO
 
@@ -20,6 +18,29 @@ load_dotenv()
 def create_app():
     app = Flask(__name__)
 
+    # trilce
+
+    # username = os.getenv("DB_USERNAME")
+    # password = os.getenv("DB_PASSWORD")
+    # host = os.getenv("DB_HOST")
+    # port = os.getenv("DB_PORT")
+    # database = os.getenv("DB_NAME")
+    # sslmode = "require"
+    # connection_string = f"postgresql+psycopg2://{username}:{password}@{host}:{port}/{database}?sslmode={sslmode}"
+
+
+    
+    # app.config['SQLALCHEMY_DATABASE_URI'] =  os.getenv("DATABASE_URL")
+    # app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    # app.config['SECRET_KEY'] = os.getenv("SECRET_KEY")
+
+    
+    # db.init_app(app)
+    # migrate.init_app(app, db)
+    # socketio.init_app(app)
+    # end
+
+    # alvaro
     username = os.getenv("DB_USERNAME")
     password = os.getenv("DB_PASSWORD")
     host = os.getenv("DB_HOST")
@@ -34,6 +55,7 @@ def create_app():
     app.config['SECRET_KEY'] = os.getenv("SECRET_KEY")
 
     db.init_app(app)
+    socketio.init_app(app)
 
     with app.app_context():
         print("Verificando la conexión a la base de datos y modelos registrados...")
@@ -79,7 +101,8 @@ def create_app():
             print(f"Error al verificar/crear las tablas: {str(e)}")
             db.session.rollback()
             raise
-
+    
+    # end
     app.register_blueprint(auth_routes, url_prefix='/api/auth')
     app.register_blueprint(interactions_bp)
     app.register_blueprint(token_routes, url_prefix='/api/token')

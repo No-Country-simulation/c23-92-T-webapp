@@ -46,29 +46,97 @@ def debug_headers():
             response["error"] = "Error al extraer el token del header"
     return jsonify(response)
 
-@interactions_bp.route('/create', methods=['POST'])
+
 @AuthMiddleware.require_auth
 @AuthMiddleware.validate_request_data(["content", "state"])
-def create_interaction(user_id):
-    try:
-        data = request.get_json()
+@interactions_bp.route('/new', methods=['GET'])
+def new_interaction():
+    return render_template("testSocket.html")
 
+
+# Para probar la conexión únicamente. Borrar luego
+@socketio.on('connect')
+def handle_connect():
+    emit('connection_response', {'data': 'Connected successfully'})
+
+@socketio.on('generate_interaction')
+def handle_generate_interaction(data, user_id):
+
+    try:
         content = data.get("content")
         state = data.get("state")
 
+        # trilce
+        if not content:
+            emit('interaction_response', {
+                "type": "error",
+                "error": "Content is required",
+                "status": "error"
+            })
+            return
+        
+        openai_service.response(
+            user_id,
+            state,
+            content=content,
+            socket=socketio,
+            event_name='interaction_response'
+        )
+        # end
+
+        #alvaro
+        
+        
+
         print(content, state)
 
-        if not content:
-            return jsonify({"error" : "Content is required"}), 400
+        # Ya esta validado más arriba
+        # if not content:
+        #     return jsonify({"error" : "Content is required"}), 400
 
-        response = openai_service.response(user_id, state, content)
+        # response = openai_service.response(user_id, state, content)
 
-        if(response):
-            return response, 201
-        else:
-            return jsonify({
-                "error": "error"
-            }), 400
+        # if(response):
+        #     return response, 201
+        # else:
+        #     return jsonify({
+        #         "error": "error"
+        #     }), 400
+
+        # end
 
     except Exception as ex:
-        return jsonify({"error": f"error: {str(ex)}"}), 500
+        emit('interaction_response', {
+            "type": "error",
+            "error": f"Error: {str(ex)}",
+            "status": "error"
+        })
+
+# @interactions_bp.route('/create', methods=['POST'])
+# @AuthMiddleware.require_auth
+# @AuthMiddleware.validate_request_data(["content", "state"])
+# def create_interaction(user_id):
+#     try:
+#         data = request.get_json()
+
+#         content = data.get("content")
+
+#         print(content)
+
+#         if not content:
+#             return jsonify({"error" : "Content is required"}), 400
+
+#         # falta agregar toda la logica del journal
+
+
+#         response = openai_service.response(content)
+
+#         if(response):
+#             return response, 201
+#         else:
+#             return jsonify({
+#                 "error": "error"
+#             }), 400
+
+#     except Exception as ex:
+#         return jsonify({"error": f"error: {str(ex)}"}), 500

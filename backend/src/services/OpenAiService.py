@@ -63,7 +63,7 @@ class OpenAIService:
                 model="gpt-3.5-turbo",
                 messages=[
                     {"role": "system", "content": "Genera un título corto y conciso (máximo 6 palabras) que resuma la siguiente interacción. Responde SOLO con el título, sin explicaciones adicionales."},
-                    {"role": "user", "content": f"Usuario ({emotional_state}): {content}\nRespuesta: {response_received}"},
+                    {"role": "user", "content": f"Usuario ({emotional_state}): {content}\nRespuesta: {full_response}"},
                 ],
                 max_tokens=20,
                 temperature=0.7
@@ -71,11 +71,11 @@ class OpenAIService:
 
             title = str(title_response.choices[0].message.content).strip()
 
-            self.interactions_service.create_interaction(user_id=user_id, title=title, state=state, content=content, response=response_received)
+            self.interactions_service.create_interaction(user_id=user_id, title=title, state=state, content=content, response=full_response)
             
             return {
                 "title": title,
-                "response": response_received
+                "response": full_response
             }
         except Exception as ex:
             Logger.add_to_log("error", f"Error al procesar la solicitud en OpenAIService: {ex}")
