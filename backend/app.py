@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, render_template
-from extensions import db, migrate, socketio
+from extensions import db, socketio
 from src.routes.AuthRoutes import auth_routes
 from src.routes.OpenAiRoutes import interactions_bp
 from src.routes.TokenRoutes import token_routes

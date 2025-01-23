@@ -55,6 +55,7 @@ def new_interaction():
 
 
 # Para probar la conexión únicamente. Borrar luego
+@AuthMiddleware.require_auth
 @socketio.on('connect')
 def handle_connect():
     emit('connection_response', {'data': 'Connected successfully'})
