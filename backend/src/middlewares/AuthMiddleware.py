@@ -44,31 +44,83 @@ class AuthMiddleware:
             try:
                 if 'Authorization' not in request.headers:
                     return jsonify({
-                        'error': 'No token provided',
+                        'success': False,
+                        'message': 'No token provided',
+                        'redirect': LOGIN_REDIRECT,
+                    }), 401
+    
+                auth_header = request.headers['Authorization']
+                parts = auth_header.split()
+                if len(parts) != 2 or parts[0].lower() != 'bearer':
+                    return jsonify({
+                        'success': False,
+                        'message': 'Invalid authorization header format',
                         'redirect': LOGIN_REDIRECT,
                         'status': 401,
                     }), 401
-
-                is_valid = Security.verify_token(request.headers)
-                if not is_valid:
+    
+                token = parts[1]
+    
+                try:
+                    payload = jwt.decode(
+                        token, 
+                        Security.secret, 
+                        algorithms=["HS256"],
+                        options={
+                            'verify_signature': True,
+                            'require_exp': True,
+                            'verify_exp': True,
+                            'verify_iat': True
+                        }
+                    )
+                except jwt.ExpiredSignatureError:
                     return jsonify({
-                        'error': 'Invalid or expired token',
-                        'status': 401,
+                        'success': False,
+                        'message': 'Token has expired',
+                        'redirect': LOGIN_REDIRECT
+                    }), 401
+                except jwt.InvalidTokenError as e:
+                    return jsonify({
+                        'success': False,
+                        'message': f'Invalid token: {str(e)}',
+                        'redirect': LOGIN_REDIRECT
+                    }), 401
+    
+                if not Security.is_valid_payload(payload):
+                    return jsonify({
+                        'success': False,
+                        'message': 'Invalid token payload',
+                        'redirect': LOGIN_REDIRECT
+                    }), 401
+    
+                is_valid = Security.verify_token(request.headers)
+                if is_valid['success'] == False:
+                    return jsonify({
+                        'success': False,
+                        'message': 'Token validation failed',
                         'redirect': LOGIN_REDIRECT
                     }), 401
                 
-                Logger.add_to_log("info", f"Authorization header: {request.headers['Authorization']}")
-
-                token = request.headers['Authorization'].split(" ")[1]
-                payload = jwt.decode(token, Security.secret, algorithms=["HS256"])
+                if not Security.validate_device(payload['id'], payload['device_id']):
+                    return jsonify({
+                        'success': False,
+                        'message': 'Unauthorized device',
+                        'redirect': LOGIN_REDIRECT
+                    }), 401
+    
+                Logger.add_to_log("info", f"Authenticated user: {payload.get('id')}")
+    
                 kwargs['user_id'] = payload.get('id')
-
+                kwargs['device_id'] = payload.get('device_id')
+    
                 return f(*args, **kwargs)
+    
             except Exception as ex:
-                Logger.add_to_log("error", str(ex))
+                # Logging de errores inesperados
+                Logger.add_to_log("error", f"Authentication error: {str(ex)}")
                 return jsonify({
-                    'error': 'Authentication error',
-                    'status': 500,
+                    'success': False,
+                    'message': f'Unexpected authentication error: {str(ex)}',
                     'redirect': LOGIN_REDIRECT
                 }), 500
         return decorated
@@ -79,17 +131,17 @@ class AuthMiddleware:
             auth_header = request.headers.get('Authorization')
             if not auth_header:
                 return jsonify({
-                    'error': 'No token provided',
+                    'success': False,
+                    'message': 'No token provided',
                     'redirect': LOGIN_REDIRECT,
-                    'status': 401,
-                })
+                }), 401
                 
             token = auth_header.split(' ')[1]
             payload = jwt.decode(token, Security.secret, algorithms=["HS256"])
             return payload.get('id')
-        except Exception:
+        except Exception as ex:
             return jsonify({
-                'error': 'Invalid token',
-                'status': 401,
+                'success': False,
+                'message': f"Error getting current user: {str(ex)}",
                 'redirect': LOGIN_REDIRECT
-            }), 401
+            }), 500

@@ -22,7 +22,7 @@ class OpenAIService:
     def response(self, user_id, state, content):
         try:
             if not content:
-                return {"error": "Not content"}
+                return {'success': False, 'error': 'Content is required'}
             
             emotional_state = self.EMOTIONAL_STATES.get(state, 'Desconocido')
 
@@ -37,7 +37,7 @@ class OpenAIService:
             )
 
             if not response:
-                return {"error": "Not reponse"}
+                return {'success': False, 'error': 'No response from OpenAI'}
             
             response_received = str(response.choices[0].message.content)
 
@@ -56,9 +56,10 @@ class OpenAIService:
             self.interactions_service.create_interaction(user_id=user_id, title=title, state=state, content=content, response=response_received)
             
             return {
+                'success': True,
                 "title": title,
                 "response": response_received
             }
         except Exception as ex:
             Logger.add_to_log("error", f"Error al procesar la solicitud en OpenAIService: {ex}")
-            raise ex
+            return {'success': False, 'error': f"Error processing request with OpenAI: {ex}"}

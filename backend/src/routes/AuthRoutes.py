@@ -4,6 +4,7 @@ from src.repositories.UserRepository import UserRepository
 from src.utils.Logger import Logger
 from src.utils.Security import Security
 import traceback
+from src.middlewares.AuthMiddleware import AuthMiddleware
 
 auth_routes = Blueprint('auth_routes', __name__)
 
@@ -15,22 +16,22 @@ def login():
         data = request.get_json()
         username = data.get('username')
         password = data.get('password')
+        device_id = data.get('device_id')
 
         if not username or not password:
             return jsonify({'success': False, 'message': 'Username and password are required'}), 400
         
         authenticated_user = auth_service.login_user(username, password)
 
-        if (authenticated_user != None):
-            encoded_access_token, encoded_refresh_token = Security.generate_token(authenticated_user)
-            return jsonify({
-                'success': True,
-                'access_token': encoded_access_token,
-                'refresh_token': encoded_refresh_token
-            }), 200
-        else:
-            response = jsonify({'message': 'Unauthorized'})
-            return response, 401
+        if isinstance(authenticated_user, dict) and 'success' in authenticated_user and authenticated_user['success'] == False:
+            return jsonify(authenticated_user), 400    
+        
+        result = Security.generate_token(authenticated_user, device_id)
+
+        if 'success' in result and result['success'] == False:
+            return jsonify(result), 500
+        
+        return jsonify(result), 200
     except Exception as ex:
         Logger.add_to_log("error", str(ex))
         Logger.add_to_log("error", traceback.format_exc())
@@ -55,4 +56,18 @@ def register():
     except Exception as ex:
         Logger.add_to_log("error", str(ex))
         Logger.add_to_log("error", traceback.format_exc())
-        return jsonify({'error': 'Internal server error'}), 500
+        return jsonify({'success': False, 'message': "Internal server error"}), 500
+    
+@auth_routes.route('/logout', methods=['POST'])
+@AuthMiddleware.require_auth
+def logout(user_id, device_id):
+    try:
+        response = auth_service.logout_user(user_id, device_id)
+        return jsonify(response), 200
+    except Exception as ex:
+        Logger.add_to_log("error", str(ex))
+        Logger.add_to_log("error", traceback.format_exc())
+        return jsonify({
+            'success': False,
+            'message': 'Logout failed'
+        }), 500
