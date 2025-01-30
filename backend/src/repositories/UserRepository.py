@@ -24,3 +24,9 @@ class UserRepository:
 
     def get_user_by_email(self, email):
         return db.session.query(User).filter_by(email=email).first()
+    
+    def update_password(self, user_id, new_password):
+        user = self.get_by_id(user_id)
+        user.password = user.encrypt_password(new_password)
+        db.session.commit()
+        return user

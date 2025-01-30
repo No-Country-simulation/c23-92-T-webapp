@@ -2,46 +2,130 @@ import traceback
 from src.utils.Logger import Logger
 from src.models.User import User
 from src.repositories.UserRepository import UserRepository
+from src.repositories.TokensRepository import TokensRepository
 import pytz
+import re
 
 
 class AuthService():
     def __init__(self):
         self.user_repository = UserRepository()
+        self.tokens_repository = TokensRepository()
 
     def login_user(self, username, password):
         try:
+            username = username.strip()
+            username = username.lower()
+            password = password.strip()
             user = self.user_repository.get_user_by_username(username)
+            if not user:
+                Logger.add_to_log("error", "User not found")
+                return {'success': False, 'message': 'User not found'}
+            Logger.add_to_log("check_password", user.check_password(password))
+            print(user.check_password(password))
             if user and user.check_password(password):
                 return user
-            return None
+            return {'success': False, 'message': 'Invalid credentials'}
         except Exception as ex:
             Logger.add_to_log("error", str(ex))
             Logger.add_to_log("error", traceback.format_exc())
-            return None
+            return {'success': False, 'message': 'Internal server error'}
         
 
     def register_user(self, username, email, password, timezone="UTC"):
         try:
             if not username or not password:
-                return {'error': 'Username and password are required'}
+                return {'success': False, 'message': 'Username and password are required'}
             
+            if not username or len(username) < 3 or len(username) > 20:
+                return {'success': False, 'message': 'Username must be between 3 and 20 characters long'}
+
             if len(password) < 8:
-                return {'error': 'Password must be at least 8 characters long'}
+                return {'success': False, 'message': 'Password must be at least 8 characters long'}
+            
+            if not email:
+                return {'success': False, 'message': 'Email is required'}
+            
+            if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+                return {'success': False, 'message': 'Invalid email address'}
 
             if self.user_repository.get_user_by_username(username):
-                return {'error': 'Username already exists'}
+                return {'success': False, 'message': 'Username already exists'}
             
             if self.user_repository.get_user_by_email(email):
-                return {'error': 'Email already exists'}
+                return {'success': False, 'message': 'Email already exists'}
             
             if timezone not in pytz.all_timezones:
-                return {'error': 'Invalid timezone'}
+                return {'success': False, 'message': 'Invalid timezone'}
             
+            username = username.strip()
+            username = username.lower()
+            email = email.strip()
+            password = password.strip()
+            timezone = timezone.strip()
+
             user = User(username=username, email=email, password=password, timezone=timezone)
             self.user_repository.add(user)
             return {'success': True, 'message': 'User created'}
         except Exception as ex:
             Logger.add_to_log("error", str(ex))
             Logger.add_to_log("error", traceback.format_exc())
-            return {'error': 'Internal server error'}
+            return {'success': False, 'message': 'Internal server error'}
+        
+    def logout_user(self, user_id, device_id):
+        try:
+            self.tokens_repository.revoke_old_tokens_for_device(user_id, device_id)
+            return {
+                'success': True,
+                'message': 'User logged out successfully'
+            }
+        except Exception as ex:
+            Logger.add_to_log("error", str(ex))
+            Logger.add_to_log("error", traceback.format_exc())
+            return {
+                'sucess': False,
+                'message': 'Logout failed'
+            }
+    
+    def change_password(self, user_id, old_password, new_password):
+        try:
+            user = self.user_repository.get_by_id(user_id)
+            if not user:
+                return {
+                    'success': False,
+                    'message': 'User not found'
+                }
+            
+            if not user.check_password(old_password):
+                return {
+                    'success': False,
+                    'message': 'Incorrect current password'
+                }
+            
+            if len(new_password) < 8:
+                return {
+                    'success': False,
+                    'message': 'Password must be at least 8 characters long'
+                }
+            
+            password_changed = self.user_repository.update_password(user_id, new_password)
+
+            if not password_changed:
+                return {
+                    'success': False,
+                    'message': 'Password change failed'
+                }
+
+            self.tokens_repository.revoke_old_tokens(user_id)
+
+            return {
+                'success': True,
+                'message': 'Password updated successfully'
+            }
+        except Exception as ex:
+            Logger.add_to_log("error", str(ex))
+            Logger.add_to_log("error", traceback.format_exc())
+            return {
+                'success': False,
+                'message': 'Password changed failed'
+            }

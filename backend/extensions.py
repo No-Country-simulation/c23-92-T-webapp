@@ -3,4 +3,4 @@ from flask_socketio import SocketIO
 
 socketio = SocketIO()
 db = SQLAlchemy()
-
+socketio = SocketIO()

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Register</title>
+    <style>
+        .title {
+            padding-left: 20px;
+        }
+
+        .response-container {
+            margin: 20px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            min-height: 100px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .form {
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            width: 70%;
+        }
+
+        .form label {
+            margin: 10px 0;
+        }
+
+        .form input {
+            padding: 10px;
+            margin: 10px 0;
+        }
+
+        .form button {
+            padding: 10px;
+            margin: 10px 0;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .error {
+            color: red;
+        }
+
+        .end-message {
+            color: green;
+            font-style: italic;
+        }
+
+        .textarea {
+            margin: 20px;
+        }
+
+        textarea {
+            padding: 20px;
+
+        }
+    </style>
+
+</head>
+
+<body>
+    <h1 class="title">MIA</h1>
+    <h2 class="title">Register</h2>
+    <form method="post" action="/api/auth/register" class="form">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username">
+        <br>
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email">
+        <br>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password">
+        <br>
+        <label for="password2">Confirm Password:</label>
+        <input type="password" id="password2" name="password2">
+        <br>
+        <button id="register">Register</button>
+    </form>
+    <div class="response-container" id="response-container"></div>
+    <script type="module">
+        async function registerUser(username, email, password, timezone) {
+            try {
+                const response = await fetch("/api/auth/register", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        username,
+                        email,
+                        password,
+                        timezone,
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || "Registration failed.");
+
+                }
+
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error("Error registering user:", error);
+                throw error;
+            }
+        }
+
+        const responseContainer = document.getElementById("response-container");
+        const registerButton = document.getElementById("register");
+        let currentResponse = "";
+        registerButton.addEventListener("click", async (event) => {
+            event.preventDefault();
+            registerButton.disabled = true;
+            registerButton.textContent = "Registering...";
+            responseContainer.innerHTML = "";
+
+            const username = document.getElementById("username").value;
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            const password2 = document.getElementById("password2").value;
+            const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+            if (!username || !email || !password || !password2) {
+                currentResponse += "All fields are required<br>";
+                responseContainer.innerHTML = currentResponse;
+                responseContainer.style.color = "red";
+                registerButton.disabled = false;
+                registerButton.textContent = "Register";
+                return;
+            }
+
+            if (password !== password2) {
+                currentResponse += "Passwords do not match<br>";
+                responseContainer.innerHTML = currentResponse;
+                responseContainer.style.color = "red";
+                registerButton.disabled = false;
+                registerButton.textContent = "Register";
+                return;
+            }
+
+            if (!validateEmail(email)) {
+                currentResponse += "Invalid email format<br>";
+                responseContainer.innerHTML = currentResponse;
+                responseContainer.style.color = "red";
+                registerButton.disabled = false;
+                registerButton.textContent = "Register";
+                return;
+            }
+
+            if (!validatePassword(password)) {
+                currentResponse += "Password must contain at least 8 characters, one uppercase letter, one lowercase letter, one number and one special character<br>";
+                responseContainer.innerHTML = currentResponse;
+                responseContainer.style.color = "red";
+                registerButton.disabled = false;
+                registerButton.textContent = "Register";
+                return;
+            }
+
+            if (!validateUsername(username)) {
+                currentResponse += "Username must be between 3 and 20 characters<br>";
+                responseContainer.innerHTML = currentResponse;
+                responseContainer.style.color = "red";
+                registerButton.disabled = false;
+                registerButton.textContent = "Register";
+                return;
+            }
+
+            try {
+                const registerData = await registerUser(username, email, password, timezone);
+
+                if (registerData.success === false) {
+                    currentResponse += registerData.message + "<br>";
+                    responseContainer.innerHTML = currentResponse;
+                    responseContainer.style.color = "red";
+                } else {
+                    currentResponse += "User registered successfully<br>";
+                    responseContainer.innerHTML = currentResponse;
+                    responseContainer.style.color = "green";
+                    window.location.href = "/login";
+                }
+            } catch (error) {
+                currentResponse += "Error: " + error.message + "<br>";
+                responseContainer.innerHTML = currentResponse;
+                responseContainer.style.color = "red";
+            } finally {
+                registerButton.disabled = false;
+                registerButton.textContent = "Register";
+            }
+
+            function validateEmail(email) {
+                const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return re.test(String(email).toLowerCase());
+            }
+
+            function validatePassword(password) {
+                const re = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!"#$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~]{8,}$/;
+                return re.test(String(password));
+            }
+
+            function validateUsername(username) {
+                return username.length >= 3 && username.length <= 20;
+            }
+        });
+    </script>
+</body>
+
+</html>

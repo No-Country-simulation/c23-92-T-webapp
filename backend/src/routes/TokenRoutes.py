@@ -1,18 +1,19 @@
-import traceback
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, make_response
 from src.utils.Logger import Logger
 from src.utils.Security import Security
+from src.services.TokensService import TokensService
 
 token_routes = Blueprint('token_routes', __name__)
 
-@token_routes.route('/refresh', methods=['POST'])
+tokens_service = TokensService()
+
+INTERNAL_SERVER_ERROR = {'success': False, 'message': 'Internal server error'}
+    
+@token_routes.route('/refresh_token', methods=['POST'])
 def refresh_token():
     try:
-        result = Security.handle_token_refresh(request.json)
-        if not result:
-            return jsonify({'error': 'Invalid refresh token'}), 401
-        return jsonify(result), 200
+        response = Security.refresh_token_from_cookie()
+        return response
     except Exception as ex:
-        Logger.add_to_log("error", str(ex))
-        Logger.add_to_log("error", traceback.format_exc())
-        return jsonify({'error': 'Internal server error'}), 500
+        Logger.add_to_log("error", f"Error refreshing token: {str(ex)}")
+        return jsonify({"success": False, "message": "Internal server error"}), 500

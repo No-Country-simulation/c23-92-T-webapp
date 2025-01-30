@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Login</title>
+    <style>
+        .title {
+            padding-left: 20px;
+        }
+
+        .response-container {
+            margin: 20px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            min-height: 100px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .form {
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            width: 70%;
+        }
+
+        .form label {
+            margin: 10px 0;
+        }
+
+        .form input {
+            padding: 10px;
+            margin: 10px 0;
+        }
+
+        .form button {
+            padding: 10px;
+            margin: 10px 0;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .error {
+            color: red;
+        }
+
+        .end-message {
+            color: green;
+            font-style: italic;
+        }
+
+        .textarea {
+            margin: 20px;
+        }
+
+        textarea {
+            padding: 20px;
+
+        }
+    </style>
+</head>
+
+<body>
+    <h1 class="title">MIA</h1>
+    <h2 class="title">Login</h2>
+    <form method="post" action="/api/auth/login" class="form">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username">
+        <br>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password">
+        <br>
+        <button id="login">Login</button>
+    </form>
+    <div class="response-container" id="response-container"></div>
+    <script type="module">
+        async function loginUser(username, password) {
+            try {
+                const response = await fetch("/api/auth/login", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        username,
+                        password,
+                    }),
+                    credentials: "include",
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    if (data.message === "You are already authenticated") {
+                        console.log(data.message);
+                        return data;
+                    }
+                }
+
+                return data;
+            } catch (error) {
+                console.error("Error logging in:", error);
+                throw error;
+            }
+        }
+
+        if (loginUser === undefined) {
+            console.log("API functions not found");
+            throw new Error("API functions not found");
+        } else {
+            console.log("API functions found");
+        }
+
+        const responseContainer = document.getElementById("response-container");
+        const loginButton = document.getElementById("login");
+        let currentResponse = "";
+
+        loginButton.addEventListener("click", async (event) => {
+            event.preventDefault();
+            loginButton.disabled = true;
+            loginButton.textContent = "Logging in...";
+            responseContainer.innerHTML = "";
+
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+
+            if (!username || !password) {
+                currentResponse += "All fields are required<br>";
+                responseContainer.innerHTML = currentResponse;
+                responseContainer.style.color = "red";
+                loginButton.disabled = false;
+                loginButton.textContent = "Login";
+                return;
+            }
+
+            try {
+                const loginData = await loginUser(username, password);
+                
+                currentResponse += "Login Message: " + loginData.message + "<br>";
+                console.log("Login message:", loginData.message);
+                responseContainer.innerHTML = currentResponse;
+                responseContainer.style.color = loginData.success ? "green" : "red";
+                window.location.href = "/testSocket";
+            } catch (error) {
+                console.error("Error logging in:", error);
+                currentResponse += "Error: " + error.message + "<br>";
+                responseContainer.innerHTML = currentResponse;
+                responseContainer.style.color = "red";
+            } finally {
+                loginButton.disabled = false;
+                loginButton.textContent = "Login";
+            }
+        });
+    </script>
+</body>
+
+</html>

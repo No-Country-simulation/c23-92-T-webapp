@@ -49,95 +49,27 @@ def debug_headers():
 
 @AuthMiddleware.require_auth
 @AuthMiddleware.validate_request_data(["content", "state"])
-@interactions_bp.route('/new', methods=['GET'])
-def new_interaction():
-    return render_template("testSocket.html")
-
-
-# Para probar la conexión únicamente. Borrar luego
-@AuthMiddleware.require_auth
-@socketio.on('connect')
-def handle_connect():
-    emit('connection_response', {'data': 'Connected successfully'})
-
-@socketio.on('generate_interaction')
-def handle_generate_interaction(data, user_id):
-
+def create_interaction(user_id, device_id):
     try:
         content = data.get("content")
         state = data.get("state")
 
         # trilce
         if not content:
-            emit('interaction_response', {
-                "type": "error",
-                "error": "Content is required",
-                "status": "error"
-            })
-            return
-        
-        openai_service.response(
-            user_id,
-            state,
-            content=content,
-            socket=socketio,
-            event_name='interaction_response'
-        )
-        # end
-
-        #alvaro
-        
-        
-
-        print(content, state)
-
-        # Ya esta validado más arriba
-        # if not content:
-        #     return jsonify({"error" : "Content is required"}), 400
+            return jsonify({
+                "success": False,
+                "message": "Content is required"
+            }), 400
 
         # response = openai_service.response(user_id, state, content)
 
-        # if(response):
-        #     return response, 201
-        # else:
-        #     return jsonify({
-        #         "error": "error"
-        #     }), 400
-
-        # end
+        if response['success'] == False:
+            return response, 500
+        else:
+            return jsonify(response), 200
 
     except Exception as ex:
-        emit('interaction_response', {
-            "type": "error",
-            "error": f"Error: {str(ex)}",
-            "status": "error"
-        })
-
-# @interactions_bp.route('/create', methods=['POST'])
-# @AuthMiddleware.require_auth
-# @AuthMiddleware.validate_request_data(["content", "state"])
-# def create_interaction(user_id):
-#     try:
-#         data = request.get_json()
-
-#         content = data.get("content")
-
-#         print(content)
-
-#         if not content:
-#             return jsonify({"error" : "Content is required"}), 400
-
-#         # falta agregar toda la logica del journal
-
-
-#         response = openai_service.response(content)
-
-#         if(response):
-#             return response, 201
-#         else:
-#             return jsonify({
-#                 "error": "error"
-#             }), 400
-
-#     except Exception as ex:
-#         return jsonify({"error": f"error: {str(ex)}"}), 500
+        return jsonify({
+            "success": False,
+            "message": f"Error creating interaction: {str(ex)}"
+        }), 500
