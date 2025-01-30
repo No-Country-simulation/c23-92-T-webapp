@@ -1,8 +1,10 @@
 from functools import wraps
-from flask import request, jsonify
+from flask import request, jsonify, redirect, Response
 from src.utils.Security import Security
 from src.utils.Logger import Logger
 import jwt
+import json
+import traceback
 
 LOGIN_REDIRECT = '/login'
 
@@ -42,28 +44,28 @@ class AuthMiddleware:
         @wraps(f)
         def decorated(*args, **kwargs):
             try:
-                if 'Authorization' not in request.headers:
-                    return jsonify({
-                        'success': False,
-                        'message': 'No token provided',
-                        'redirect': LOGIN_REDIRECT,
-                    }), 401
-    
-                auth_header = request.headers['Authorization']
-                parts = auth_header.split()
-                if len(parts) != 2 or parts[0].lower() != 'bearer':
-                    return jsonify({
-                        'success': False,
-                        'message': 'Invalid authorization header format',
-                        'redirect': LOGIN_REDIRECT,
-                        'status': 401,
-                    }), 401
-    
-                token = parts[1]
-    
+                token_result = Security.get_secure_cookie('token', max_age=7200)
+                device_id_result = Security.get_secure_cookie('device_id', max_age=30 * 24 * 60 * 60)  # 30 days
+
+                Logger.add_to_log("info", f"Token result: {token_result}")
+                Logger.add_to_log("info", f"Device ID result: {device_id_result}")
+
+                if not token_result.get('success') or not device_id_result.get('success'):
+                    Logger.add_to_log("info", "No token or device_id provided")
+                    refresh_response = Security.refresh_token_from_cookie()
+
+                    if not isinstance(refresh_response, Response):
+                        Logger.add_to_log("info", "Redirecting to login")
+                        return redirect("/login")
+
+                    return refresh_response  # Devolver la respuesta con el nuevo access_token
+
+                access_token = token_result['value']
+                device_id = device_id_result['value']
+
                 try:
                     payload = jwt.decode(
-                        token, 
+                        access_token, 
                         Security.secret, 
                         algorithms=["HS256"],
                         options={
@@ -74,74 +76,108 @@ class AuthMiddleware:
                         }
                     )
                 except jwt.ExpiredSignatureError:
-                    return jsonify({
-                        'success': False,
-                        'message': 'Token has expired',
-                        'redirect': LOGIN_REDIRECT
-                    }), 401
+                    Logger.add_to_log("info", "Token has expired")
+
+                    refresh_response = Security.refresh_token_from_cookie()
+                    return refresh_response
+
                 except jwt.InvalidTokenError as e:
+                    Logger.add_to_log("info", f"Invalid token: {str(e)}")
                     return jsonify({
                         'success': False,
-                        'message': f'Invalid token: {str(e)}',
+                        'message': 'Invalid token',
                         'redirect': LOGIN_REDIRECT
                     }), 401
-    
+
                 if not Security.is_valid_payload(payload):
+                    Logger.add_to_log("info", "Invalid token payload")
                     return jsonify({
                         'success': False,
                         'message': 'Invalid token payload',
                         'redirect': LOGIN_REDIRECT
                     }), 401
-    
-                is_valid = Security.verify_token(request.headers)
-                if is_valid['success'] == False:
+
+                # Verificar que el device_id del token coincida con el de la cookie
+                if payload['device_id'] != device_id:
+                    Logger.add_to_log("info", "Device ID mismatch")
                     return jsonify({
                         'success': False,
-                        'message': 'Token validation failed',
+                        'message': 'Invalid device',
                         'redirect': LOGIN_REDIRECT
                     }), 401
-                
+
                 if not Security.validate_device(payload['id'], payload['device_id']):
-                    return jsonify({
+                    Logger.add_to_log("info", f"Unauthorized device for user: {payload.get('id')}")
+                    response = Security.clear_device_cookies()
+                    response.status_code = 401
+                    response.data = json.dumps({
                         'success': False,
                         'message': 'Unauthorized device',
                         'redirect': LOGIN_REDIRECT
-                    }), 401
-    
+                    })
+                    return response
+
                 Logger.add_to_log("info", f"Authenticated user: {payload.get('id')}")
-    
+
                 kwargs['user_id'] = payload.get('id')
                 kwargs['device_id'] = payload.get('device_id')
-    
+
                 return f(*args, **kwargs)
-    
+
             except Exception as ex:
-                # Logging de errores inesperados
                 Logger.add_to_log("error", f"Authentication error: {str(ex)}")
+                Logger.add_to_log("error", traceback.format_exc())
                 return jsonify({
                     'success': False,
-                    'message': f'Unexpected authentication error: {str(ex)}',
+                    'message': 'Authentication error',
                     'redirect': LOGIN_REDIRECT
                 }), 500
         return decorated
-
-    @staticmethod
-    def get_current_user():
-        try:
-            auth_header = request.headers.get('Authorization')
-            if not auth_header:
-                return jsonify({
-                    'success': False,
-                    'message': 'No token provided',
-                    'redirect': LOGIN_REDIRECT,
-                }), 401
+        
+    @classmethod
+    def reject_authenticated_json(cls, f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            access_token = Security.get_secure_cookie('token', max_age=7200)  # 2 horas
+            
+            if access_token and access_token['success']:
+                try:
+                    print("Access token:", access_token)
+                    result = Security.verify_token(access_token['value'])
+                    if result['success']:
+                        return redirect('/testSocket')
+                    else:
+                        print(f"Token is invalid: {result['message']}")
                 
-            token = auth_header.split(' ')[1]
-            payload = jwt.decode(token, Security.secret, algorithms=["HS256"])
-            return payload.get('id')
-        except Exception as ex:
-            return jsonify({
-                'success': False,
-                'message': f"Error getting current user: {str(ex)}",
-                'redirect': LOGIN_REDIRECT
-            }), 500
+                except (jwt.ExpiredSignatureError, jwt.InvalidTokenError) as e:
+                    print(f"Token error: {e}")
+
+            return f(*args, **kwargs)
+        
+        return decorated_function
+    
+    @classmethod
+    def reject_authenticated_json_server(cls, f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            access_token = Security.get_secure_cookie('token', max_age=7200)  # 2 horas
+            
+            if access_token and access_token['success']:
+                try:
+                    print("Access token:", access_token)
+                    result = Security.verify_token(access_token['value'])
+                    if result['success']:
+                        return jsonify({
+                            'success': False,
+                            'message': 'You are already authenticated',
+                            'redirect': '/testSocket'
+                        }), 403
+                    else:
+                        print(f"Token is invalid: {result['message']}")
+                
+                except (jwt.ExpiredSignatureError, jwt.InvalidTokenError) as e:
+                    print(f"Token error: {e}")
+
+            return f(*args, **kwargs)
+        
+        return decorated_function
