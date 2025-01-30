@@ -2,8 +2,11 @@ from flask import Flask, jsonify
 from src.routes.AuthRoutes import auth_routes
 from src.routes.OpenAiRoutes import interactions_bp
 from src.routes.TokenRoutes import token_routes
+from src.routes.TestRoutes import test_routes
+from src.routes.AuthSockets import register_auth_events
+from src.routes.OpenAiSockets import register_interactions_events
 from dotenv import load_dotenv
-from extensions import db
+from extensions import db, socketio
 import os
 
 # Importar todos los modelos
@@ -30,6 +33,8 @@ def create_app():
     app.config['SECRET_KEY'] = os.getenv("SECRET_KEY")
 
     db.init_app(app)
+
+    socketio.init_app(app, cors_allowed_origins="*", cors_credentials=True)
 
     with app.app_context():
         print("Verificando la conexión a la base de datos y modelos registrados...")
@@ -79,6 +84,9 @@ def create_app():
     app.register_blueprint(auth_routes, url_prefix='/api/auth')
     app.register_blueprint(interactions_bp)
     app.register_blueprint(token_routes, url_prefix='/api/token')
+    app.register_blueprint(test_routes)
+    register_auth_events(socketio)
+    register_interactions_events(socketio)
 
     @app.route("/api", methods=["GET"])
     def home():
@@ -87,8 +95,8 @@ def create_app():
             "result": "Successfully"
         })
 
-    return app
+    return app, socketio
 
 if __name__ == "__main__":
-    app = create_app()
-    app.run(debug=True)
+    app, socketio = create_app()
+    socketio.run(app, debug=True, log_output=True)
