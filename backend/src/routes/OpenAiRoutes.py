@@ -46,7 +46,7 @@ def debug_headers():
 @interactions_bp.route('/create', methods=['POST'])
 @AuthMiddleware.require_auth
 @AuthMiddleware.validate_request_data(["content", "state"])
-def create_interaction(user_id):
+def create_interaction(user_id, device_id):
     try:
         data = request.get_json()
 
@@ -56,16 +56,20 @@ def create_interaction(user_id):
         print(content, state)
 
         if not content:
-            return jsonify({"error" : "Content is required"}), 400
+            return jsonify({
+                "success": False,
+                "message": "Content is required"
+            }), 400
 
         response = openai_service.response(user_id, state, content)
 
-        if(response):
-            return response, 201
+        if response['success'] == False:
+            return response, 500
         else:
-            return jsonify({
-                "error": "error"
-            }), 400
+            return jsonify(response), 200
 
     except Exception as ex:
-        return jsonify({"error": f"error: {str(ex)}"}), 500
+        return jsonify({
+            "success": False,
+            "message": f"Error creating interaction: {str(ex)}"
+        }), 500

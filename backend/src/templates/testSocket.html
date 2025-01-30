@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Socket.IO Test</title>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <style>
+        .title {
+            padding-left: 20px;
+        }
+
+        .response-container {
+            margin: 20px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            min-height: 100px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .form {
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            width: 70%;
+        }
+
+        .form label {
+            margin: 10px 0;
+        }
+
+        .form input {
+            padding: 10px;
+            margin: 10px 0;
+        }
+
+        .form button {
+            padding: 10px;
+            margin: 10px 0;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .error {
+            color: red;
+        }
+
+        .end-message {
+            color: green;
+            font-style: italic;
+        }
+
+        .textarea {
+            margin: 20px;
+        }
+
+        textarea {
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1 class="title">MIA</h1>
+    <h2 class="title">Socket.IO Client</h2>
+
+    <div class="textarea">
+        <textarea 
+            id="message" 
+            rows="5" 
+            cols="40" 
+            placeholder="Write your message here..."
+        ></textarea>
+        <br>
+        <label for="emotional-state">Estado de ánimo:</label>
+        <select id="emotional-state">
+            <option value="1">Feliz</option>
+            <option value="2">Disgustado o Tenso</option>
+            <option value="3">Triste</option>
+            <option value="4">Enojado</option>
+            <option value="5">Relajado o Cansado</option>
+        </select>
+        <br>
+        <button id="send">Send</button>
+    </div>
+
+    <div class="response-container" id="response-container"></div>
+
+    <script>
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+
+        const socket = io("http://127.0.0.1:5000", {
+            withCredentials: true,
+            transports: ['websocket']
+        });
+
+        const responseContainer = document.getElementById("response-container");
+        let currentResponse = "";
+
+        socket.on('connect', () => {
+            console.log('Connected to server');
+            console.log('Token:', getCookie('token'));
+            console.log('Device ID:', getCookie('device_id'));
+        });
+
+        socket.on('connect_error', (error) => {
+            console.log(`Connection error: ${error.message}`);
+            responseContainer.innerHTML = `<p class="error">Connection error: ${error.message}</p>`;
+        });
+
+        socket.on('token_expired', () => {
+            console.log("Token expired, refreshing...");
+            refreshToken();
+        });
+
+        socket.on('authentication_error', () => {
+            console.error('Authentication error');
+            window.location.href = '/login';
+        });
+
+        function refreshToken() {
+            fetch('/api/token/refresh_token', {
+                method: 'POST',
+                credentials: 'include'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('Token refreshed successfully');
+                    window.location.reload();
+                } else {
+                    console.error('Failed to refresh token');
+                    responseContainer.innerHTML = `<p class="error">Failed to refresh token</p>`;
+                }
+            })
+            .catch(error => {
+                console.error('Error refreshing token:', error);
+                responseContainer.innerHTML = `<p class="error">Error refreshing token: ${error.message}</p>`;
+            });
+        }
+
+        document.getElementById("send").addEventListener("click", () => {
+            const messageInput = document.getElementById("message");
+            const emotionalStateSelect = document.getElementById("emotional-state");
+            
+            const message = messageInput.value.trim();
+            const emotionalState = emotionalStateSelect.value;
+
+            if (message) {
+                responseContainer.innerHTML = 'Waiting for response...<br>';
+                currentResponse = "";
+
+                socket.emit("generate_interaction", { 
+                    content: message, 
+                    state: parseInt(emotionalState)
+                });
+                console.log('Sent:', message, 'Emotional State:', emotionalState);
+                messageInput.value = "";
+            }
+        });
+
+        socket.on("interaction_response", (response) => {
+            console.log('Received:', response);
+            
+            switch(response.type) {
+                case 'chunk':
+                    currentResponse += response.data;
+                    responseContainer.innerHTML = currentResponse;
+                    responseContainer.scrollTop = responseContainer.scrollHeight;
+                    break;
+                    
+                case 'end':
+                    responseContainer.innerHTML = currentResponse + 
+                        '<p class="end-message">Response completed</p>';
+                    break;
+                    
+                case 'error':
+                    responseContainer.innerHTML = 
+                        `<p class="error">Error: ${response.error}</p>`;
+                    break;
+                    
+                default:
+                    console.log('Unknown response type:', response);
+            }
+        });
+
+        socket.on('connect_error', (error) => {
+            console.error('Connection error:', error);
+            responseContainer.innerHTML = 
+                `<p class="error">Connection error: ${error.message}</p>`;
+        });
+    </script>
+</body>
+</html>
