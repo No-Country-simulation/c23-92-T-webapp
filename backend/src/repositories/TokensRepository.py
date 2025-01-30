@@ -47,3 +47,10 @@ class TokensRepository:
     
     def get_tokens_by_username(self, username: str):
         return db.session.query(Token).join(User).filter(User.username == username).all()
+    
+    def get_oldest_active_token(self, user_id: str):
+        return db.session.query(Token).filter(Token.user_id == user_id, Token.is_revoked == False).order_by(Token.created_at).first()
+    
+    def revoke_token(self, token_id: str):
+        db.session.query(Token).filter(Token.id == token_id).update({Token.is_revoked: True})
+        db.session.commit()
