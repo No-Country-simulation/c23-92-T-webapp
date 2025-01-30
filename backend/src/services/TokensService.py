@@ -117,4 +117,19 @@ class TokensService:
             Logger.add_to_log("error", traceback.format_exc())
             return INTERNAL_SERVER_ERROR
         
-    
+    def get_oldest_active_token(self, user_id: str) -> Token:
+        try:
+            return self.token_repository.get_oldest_active_token(user_id)
+        except Exception as ex:
+            Logger.add_to_log("error", str(ex))
+            Logger.add_to_log("error", traceback.format_exc())
+            return INTERNAL_SERVER_ERROR
+        
+    def revoke_token(self, token_id: str):
+        try:
+            self.token_repository.revoke_token(token_id)
+            return True
+        except Exception as ex:
+            Logger.add_to_log("error", str(ex))
+            Logger.add_to_log("error", traceback.format_exc())
+            return INTERNAL_SERVER_ERROR
