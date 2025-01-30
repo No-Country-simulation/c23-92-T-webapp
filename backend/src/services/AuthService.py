@@ -4,6 +4,7 @@ from src.models.User import User
 from src.repositories.UserRepository import UserRepository
 from src.repositories.TokensRepository import TokensRepository
 import pytz
+import re
 
 
 class AuthService():
@@ -13,7 +14,15 @@ class AuthService():
 
     def login_user(self, username, password):
         try:
+            username = username.strip()
+            username = username.lower()
+            password = password.strip()
             user = self.user_repository.get_user_by_username(username)
+            if not user:
+                Logger.add_to_log("error", "User not found")
+                return {'success': False, 'message': 'User not found'}
+            Logger.add_to_log("check_password", user.check_password(password))
+            print(user.check_password(password))
             if user and user.check_password(password):
                 return user
             return {'success': False, 'message': 'Invalid credentials'}
@@ -28,8 +37,17 @@ class AuthService():
             if not username or not password:
                 return {'success': False, 'message': 'Username and password are required'}
             
+            if not username or len(username) < 3 or len(username) > 20:
+                return {'success': False, 'message': 'Username must be between 3 and 20 characters long'}
+
             if len(password) < 8:
                 return {'success': False, 'message': 'Password must be at least 8 characters long'}
+            
+            if not email:
+                return {'success': False, 'message': 'Email is required'}
+            
+            if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+                return {'success': False, 'message': 'Invalid email address'}
 
             if self.user_repository.get_user_by_username(username):
                 return {'success': False, 'message': 'Username already exists'}
@@ -40,6 +58,12 @@ class AuthService():
             if timezone not in pytz.all_timezones:
                 return {'success': False, 'message': 'Invalid timezone'}
             
+            username = username.strip()
+            username = username.lower()
+            email = email.strip()
+            password = password.strip()
+            timezone = timezone.strip()
+
             user = User(username=username, email=email, password=password, timezone=timezone)
             self.user_repository.add(user)
             return {'success': True, 'message': 'User created'}
