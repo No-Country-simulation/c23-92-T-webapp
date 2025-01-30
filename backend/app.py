@@ -6,6 +6,7 @@ from src.routes.TokenRoutes import token_routes
 from dotenv import load_dotenv
 import os
 from flask_socketio import SocketIO
+from flask_cors import CORS
 
 
 # Importar todos los modelos
@@ -17,6 +18,7 @@ load_dotenv()
 
 def create_app():
     app = Flask(__name__)
+    CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 
     # trilce
 
