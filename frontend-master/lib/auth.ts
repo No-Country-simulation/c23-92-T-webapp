@@ -9,11 +9,12 @@ export async function login(username: string, password: string) {
     }
 }
 
-export async function register(username: string, email: string, password: string) {
+export async function register(username: string, email: string, password: string, timezone: string) {
     try {
-        const response = await apiRequest("/auth/register", "POST", { username, email, password });
+        const response = await apiRequest("/auth/register", "POST", { username, email, password, timezone });
         return response;
     } catch (error) {
         throw error;
     }
 }
+ 

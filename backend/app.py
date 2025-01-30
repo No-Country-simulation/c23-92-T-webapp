@@ -24,29 +24,6 @@ def create_app():
     app = Flask(__name__)
     CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 
-    # trilce
-
-    # username = os.getenv("DB_USERNAME")
-    # password = os.getenv("DB_PASSWORD")
-    # host = os.getenv("DB_HOST")
-    # port = os.getenv("DB_PORT")
-    # database = os.getenv("DB_NAME")
-    # sslmode = "require"
-    # connection_string = f"postgresql+psycopg2://{username}:{password}@{host}:{port}/{database}?sslmode={sslmode}"
-
-
-    
-    # app.config['SQLALCHEMY_DATABASE_URI'] =  os.getenv("DATABASE_URL")
-    # app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    # app.config['SECRET_KEY'] = os.getenv("SECRET_KEY")
-
-    
-    # db.init_app(app)
-    # migrate.init_app(app, db)
-    # socketio.init_app(app)
-    # end
-
-    # alvaro
     username = os.getenv("DB_USERNAME")
     password = os.getenv("DB_PASSWORD")
     host = os.getenv("DB_HOST")

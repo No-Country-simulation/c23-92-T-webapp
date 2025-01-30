@@ -13,6 +13,7 @@ import { PasswordInput } from "@/components/ui/password-input";
 import { useRouter } from "next/navigation";
 import { register } from "@/lib/auth";
 
+
 export default function RegisterPage() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -22,6 +23,8 @@ export default function RegisterPage() {
 
   const { theme } = useTheme();
   const router = useRouter();
+
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,7 +36,7 @@ export default function RegisterPage() {
     }
 
     try {
-      const response = await register(username, email, password);
+      const response = await register(username, email, password, timezone);
       console.log("Usuario registrado:", response);
       router.push("/login"); // Redirige al login tras el registro
     } catch (error: any) {
