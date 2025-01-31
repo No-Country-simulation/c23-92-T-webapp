@@ -1,19 +1,22 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-import { MOODS, MoodType } from "@/lib/constants/moods";
+import { MoodKey, MOODS } from "@/lib/constants/moods";
+
 
 type InteractionsListProps = {
   title: string;
   date: string;
-  mood: MoodType;
+  mood: MoodKey;
 };
 
 const InteractionsList: React.FC<InteractionsListProps> = ({ title, date, mood }) => {
-    const moodData = MOODS[mood]; // Ahora TypeScript lo reconoce correctamente
-  
+    
+  const moodData = MOODS[mood]; 
+
+
     return (
-      <div className="flex items-center justify-between p-4">
+      <div className="flex items-center justify-between p-3">
         
         {/* 📖 Título y  📅 Fecha*/}
         <div className="ms-2">
@@ -24,8 +27,11 @@ const InteractionsList: React.FC<InteractionsListProps> = ({ title, date, mood }
         </div>
 
         {/* 😀 Estado de ánimo */}
-        <span className={cn("text-sm font-bold", moodData.color)}>
-          <Image src={moodData.image} alt={moodData.label} className="w-6 h-6 inline-block mr-2" />
+        <span className={cn("text-sm font-bold")}>
+        
+        {moodData.icon}
+        
+      
         </span>
       </div>
     );

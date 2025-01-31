@@ -12,7 +12,7 @@ export interface NavItem {
   href: string;
   icon: ReactNode;
 }
-
+ 
 export const navItems: NavItem[] = [
   {
     id: 1,
