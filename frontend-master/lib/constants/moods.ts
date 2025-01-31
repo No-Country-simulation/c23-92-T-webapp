@@ -3,35 +3,32 @@ import NeutralEmoji from "@/public/images/emoji-natural.png";
 import SadEmoji from "@/public/images/emoji-triste.png";
 import AngryEmoji from "@/public/images/emoji-enojado.png";
 
-export const MOODS = [
-  {
-    id: "happy",
+export const MOODS = {
+  happy: {
     image: HappyEmoji,
     label: "Feliz",
-    color: "green",
+    color: "text-green-500",
     gradient: "from-green-100 to-transparent dark:from-green-950/50",
   },
-  {
-    id: "neutral",
+  neutral: {
     image: NeutralEmoji,
     label: "Neutral",
-    color: "yellow",
+    color: "text-yellow-500",
     gradient: "from-yellow-100 to-transparent dark:from-yellow-950/50",
   },
-  {
-    id: "sad",
+  sad: {
     image: SadEmoji,
     label: "Triste",
-    color: "blue",
+    color: "text-blue-500",
     gradient: "from-blue-100 to-transparent dark:from-blue-950/50",
   },
-  {
-    id: "angry",
+  angry: {
     image: AngryEmoji,
     label: "Enojado",
-    color: "red",
+    color: "text-red-500",
     gradient: "from-red-100 to-transparent dark:from-red-950/50",
   },
-] as const;
+} as const;
 
-export type MoodType = (typeof MOODS)[number]["id"];
+export type MoodType = keyof typeof MOODS;
+

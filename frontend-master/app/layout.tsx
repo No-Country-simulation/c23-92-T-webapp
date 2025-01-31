@@ -28,12 +28,12 @@ export default function RootLayout({
   return (
     <html lang="en">
     <body
-      className={`${geistSans.variable} ${geistMono.variable} antialiased p-10`}
+      className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen p-10`}
     >
       <ThemeProvider attribute="class" defaultTheme="system">
-      <div className="flex relative min-h-screen max-w-screen-xl m-auto 
-                    bg-[#F6F4FA]
-                    rounded-3xl">
+      <div className="flex relative max-w-screen-xl m-auto
+                  bg-[#F6F4FA]
+                  rounded-3xl">
             {/* Sidebar */}
             <aside className="relative">
               <Sidebar />
