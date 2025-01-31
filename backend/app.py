@@ -1,4 +1,5 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, render_template
+from extensions import db, socketio
 from src.routes.AuthRoutes import auth_routes
 from src.routes.OpenAiRoutes import interactions_bp
 from src.routes.TokenRoutes import token_routes
@@ -8,6 +9,9 @@ from src.routes.OpenAiSockets import register_interactions_events
 from dotenv import load_dotenv
 from extensions import db, socketio
 import os
+from flask_socketio import SocketIO
+from flask_cors import CORS
+
 
 # Importar todos los modelos
 from src.models.Interactions import Interactions
@@ -18,6 +22,7 @@ load_dotenv()
 
 def create_app():
     app = Flask(__name__)
+    CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 
     username = os.getenv("DB_USERNAME")
     password = os.getenv("DB_PASSWORD")
@@ -80,7 +85,8 @@ def create_app():
             print(f"Error al verificar/crear las tablas: {str(e)}")
             db.session.rollback()
             raise
-
+    
+    # end
     app.register_blueprint(auth_routes, url_prefix='/api/auth')
     app.register_blueprint(interactions_bp)
     app.register_blueprint(token_routes, url_prefix='/api/token')
