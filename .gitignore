@@ -27,7 +27,8 @@ migrations/
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-frontend-master/node_modules
+frontend/node_modules/
+
 /.pnp
 .pnp.*
 .yarn/*
@@ -40,8 +41,9 @@ frontend-master/node_modules
 /coverage
 
 # next.js
-frontend-master/.next/
-frontend-master/out/
+frontend/.next/
+frontend/out/
+
 
 # production
 /build
@@ -64,9 +66,13 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
-frontend-master/next-env.d.ts
+
+frontend/next-env.d.ts
+
 
 # cursor
 .cursorrules
 
-frontend-master/package-lock.json
+
+frontend/package-lock.json
+

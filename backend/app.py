@@ -6,8 +6,10 @@ from src.routes.TokenRoutes import token_routes
 from src.routes.TestRoutes import test_routes
 from src.routes.AuthSockets import register_auth_events
 from src.routes.OpenAiSockets import register_interactions_events
+from src.routes.JournalSockets import register_journal_events
 from dotenv import load_dotenv
 from extensions import db, socketio
+from flask_cors import CORS
 import os
 from flask_socketio import SocketIO
 from flask_cors import CORS
@@ -22,7 +24,16 @@ load_dotenv()
 
 def create_app():
     app = Flask(__name__)
-    CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
+
+    CORS(
+        app,
+        resources={r"/*": {
+            "origins": ["http://localhost:3000", "http://192.168.18.118:3000"],
+            "methods": ["GET", "POST", "PUT", "DELETE"],
+            "supports_credentials": True,
+            "allow_headers": ["Authorization", "Content-Type"],
+        }},
+    )
 
     username = os.getenv("DB_USERNAME")
     password = os.getenv("DB_PASSWORD")
@@ -93,6 +104,7 @@ def create_app():
     app.register_blueprint(test_routes)
     register_auth_events(socketio)
     register_interactions_events(socketio)
+    register_journal_events(socketio)
 
     @app.route("/api", methods=["GET"])
     def home():
@@ -105,4 +117,4 @@ def create_app():
 
 if __name__ == "__main__":
     app, socketio = create_app()
-    socketio.run(app, debug=True, log_output=True)
+    socketio.run(app, host="localhost", port=5000, debug=True, log_output=True)

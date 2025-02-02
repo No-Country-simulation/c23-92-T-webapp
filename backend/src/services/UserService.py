@@ -37,3 +37,23 @@ class UserService:
                 'success': False,
                 'error': 'Internal server error'
             }
+        
+    def get_timezone(self, user_id: int):
+        try:
+            timezone = self.user_repository.get_timezone(user_id)
+            if not timezone:
+                return {
+                    'success': False,
+                    'error': 'User not found and timezone not set'
+                }
+            return {
+                'success': True,
+                'timezone': timezone
+            }
+        except Exception as ex:
+            Logger.add_to_log("error", str(ex))
+            Logger.add_to_log("error", traceback.format_exc())
+            return {
+                'success': False,
+                'error': 'Internal server error'
+            }

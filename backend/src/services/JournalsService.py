@@ -3,6 +3,8 @@ from src.repositories.JournalsRepository import JournalsRepository
 from src.repositories.JournalsRepository import JournalsRepository
 from src.models.Journal import Journal
 from datetime import datetime
+import pytz
+from datetime import timedelta
 
 INTERNAL_SERVER_ERROR = {'success': False, 'message': 'Internal server error'}, 500
 
@@ -65,7 +67,9 @@ class JournalsService:
         
     def get_all(self, user_id):
         try:
-            return self.journals_repository.find_all_by_user_id(user_id)
+            journals = self.journals_repository.find_all_by_user_id(user_id)
+            journals_dict = [journal.to_dict() for journal in journals]
+            return journals_dict
         except Exception as ex:
             Logger.add_to_log("error", f"Error al obtener el registro de JournalsService: {ex}")
             return INTERNAL_SERVER_ERROR
@@ -76,3 +80,23 @@ class JournalsService:
         except Exception as ex:
             Logger.add_to_log("error", f"Error al obtener el registro de JournalsService: {ex}")
             return INTERNAL_SERVER_ERROR
+        
+    def find_journal_of_today_by_id(self, user_id, user_timezone='UTC'):
+        try:
+            user_tz = pytz.timezone(user_timezone)
+            user_now = datetime.now(user_tz)
+
+            today_start = user_now.replace(hour=0, minute=0, second=0, microsecond=0)
+            today_end = today_start + timedelta(days=1) - timedelta(microseconds=1)
+
+            today_start_utc = today_start.astimezone(pytz.UTC)
+            today_end_utc = today_end.astimezone(pytz.UTC)
+
+            journal = self.journals_repository.find_by_date_range(user_id, today_start_utc, today_end_utc)
+
+            Logger.add_to_log("info", f"Journal found: {journal}")
+
+            return journal
+        except Exception as ex:
+            Logger.add_to_log("error", f"Error al obtener el journal del día: {ex}")
+            raise  # Relanza la excepción para manejarla en el lugar adecuado

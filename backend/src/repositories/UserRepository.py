@@ -30,3 +30,7 @@ class UserRepository:
         user.password = user.encrypt_password(new_password)
         db.session.commit()
         return user
+    
+    def get_timezone(self, user_id):
+        user = self.get_by_id(user_id)
+        return user.timezone

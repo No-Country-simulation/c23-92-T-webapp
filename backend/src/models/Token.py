@@ -27,13 +27,13 @@ class Token(db.Model):
 
     def to_dict(self):
         return {
-            "id": self.id,
-            "user_id": self.user_id,
+            "id": str(self.id),
+            "user_id": str(self.user_id),
             "refresh_token": self.refresh_token,
             "token_signature": self.token_signature,
             "is_revoked": self.is_revoked,
             "created_at": self.created_at,
             "updated_at": self.updated_at,
             "expires_at": self.expires_at,
-            "device_id": self.device_id
+            "device_id": str(self.device_id)
         }
