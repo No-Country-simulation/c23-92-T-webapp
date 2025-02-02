@@ -34,20 +34,27 @@ class AuthService():
 
     def register_user(self, username, email, password, timezone="UTC"):
         try:
-            if not username or not password:
-                return {'success': False, 'message': 'Username and password are required'}
-            
-            if not username or len(username) < 3 or len(username) > 20:
-                return {'success': False, 'message': 'Username must be between 3 and 20 characters long'}
+            if not all([username, email, password]):
+                return {'success': False, 'message': 'Username, email and password are required'}
 
-            if len(password) < 8:
-                return {'success': False, 'message': 'Password must be at least 8 characters long'}
+            username = username.strip()
+            username = username.lower()
+            email = email.strip()
+            password = password.strip()
+            timezone = timezone.strip()
             
-            if not email:
-                return {'success': False, 'message': 'Email is required'}
-            
-            if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
-                return {'success': False, 'message': 'Invalid email address'}
+            if not (3 <= len(username) <= 20):
+                return {'success': False, 'message': 'Username must be between 3 and 20 characters'}
+
+            email_pattern = r'^[^\s@]+@[^\s@]+\.[^\s@]+$'
+            if not re.match(email_pattern, email):
+                return {'success': False, 'message': 'Invalid email format'}
+
+            if not self._validate_password(password):
+                return {
+                    'success': False, 
+                    'message': 'Password must be at least 8 characters long, contain at least one uppercase letter, one lowercase letter, one number and one special character'
+                }
 
             if self.user_repository.get_user_by_username(username):
                 return {'success': False, 'message': 'Username already exists'}
@@ -58,19 +65,32 @@ class AuthService():
             if timezone not in pytz.all_timezones:
                 return {'success': False, 'message': 'Invalid timezone'}
             
-            username = username.strip()
-            username = username.lower()
-            email = email.strip()
-            password = password.strip()
-            timezone = timezone.strip()
-
             user = User(username=username, email=email, password=password, timezone=timezone)
             self.user_repository.add(user)
-            return {'success': True, 'message': 'User created'}
+            return {'success': True, 'message': 'User registered successfully'}
         except Exception as ex:
             Logger.add_to_log("error", str(ex))
             Logger.add_to_log("error", traceback.format_exc())
             return {'success': False, 'message': 'Internal server error'}
+        
+    def _validate_password(self, password):
+        if len(password) < 8:
+            return False
+            
+        if not re.search(r'[A-Z]', password):
+            return False
+            
+        if not re.search(r'[a-z]', password):
+            return False
+            
+        if not re.search(r'\d', password):
+            return False
+            
+        special_chars = r'[!"#$%&\'()*+,\-./:;<=>?@\[\\\]^_`{|}~]'
+        if not re.search(special_chars, password):
+            return False
+            
+        return True
         
     def logout_user(self, user_id, device_id):
         try:

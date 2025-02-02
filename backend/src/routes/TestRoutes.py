@@ -16,6 +16,5 @@ def register():
     return render_template('register.html')
 
 @test_routes.route('/testSocket')
-@AuthMiddleware.require_auth
 def home(**kwargs):
     return render_template('testSocket.html')

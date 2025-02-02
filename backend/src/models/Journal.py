@@ -18,5 +18,12 @@ class Journal(db.Model):
     def __init__(self, user_id):
         self.user_id = user_id
     
+    def to_dict(self):
+        return {
+            "date_journal": self.date_journal.isoformat() if self.date_journal else None,
+            "interactions_count": self.interactions_count,
+            "interactions": [interaction.to_dict_without_journal() for interaction in self.interactions]
+        }
+
     def __repr__(self):
         return f"<Journal {self.id}>"
