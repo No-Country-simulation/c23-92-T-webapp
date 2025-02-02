@@ -1,10 +1,10 @@
 import { ReactNode } from "react";
-import DashboardIcon from "../../components/icons/dashboardIcon";
-import NotesIcon from "@/components/icons/notesIcon";
-import StatisticsIcon from "@/components/icons/statisticsIcon";
-import CalendarIcon from "@/components/icons/calendarIcon";
-import SettingsIcon from "@/components/icons/settingsIcon";
-import UserIcon from "@/components/icons/userIcon";
+import DashboardIcon from "../../components/icons/sidebar/dashboardIcon";
+import NotesIcon from "@/components/icons/sidebar/notesIcon";
+import StatisticsIcon from "@/components/icons/sidebar/statisticsIcon";
+import CalendarIcon from "@/components/icons/sidebar/calendarIcon";
+import SettingsIcon from "@/components/icons/sidebar/settingsIcon";
+import UserIcon from "@/components/icons/sidebar/userIcon";
 
 export interface NavItem {
   id: number;

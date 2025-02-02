@@ -1,18 +1,14 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Dosis } from "next/font/google";
 import "./globals.css";
 import Sidebar from "@/components/navigation/sidebar";
-
 import { ThemeProvider } from "@/components/theme-provider";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const dosis = Dosis({
   subsets: ["latin"],
+  weight: ["200", "300", "400", "500", "600", "700", "800"],
+  variable: "--font-dosis",
 });
 
 export const metadata: Metadata = {
@@ -27,25 +23,21 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-    <body
-      className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen p-10`}
-    >
-      <ThemeProvider attribute="class" defaultTheme="system">
-      <div className="flex relative max-w-screen-xl m-auto
-                  bg-[#F6F4FA]
-                  rounded-3xl">
+      <body
+        className={`${dosis.variable} font-sans antialiased p-10`} // Apply Nunito
+      >
+        <ThemeProvider attribute="class" defaultTheme="system">
+          <div className="flex relative max-w-screen-xl min-h-screen m-auto bg-[#F6F4FA] rounded-3xl">
             {/* Sidebar */}
             <aside className="relative">
               <Sidebar />
             </aside>
 
-            {/* Contenido principal */}
-            <main className="flex-1 p-6 ms-28">
-              {children}
-            </main>
+            {/* Main Content */}
+            <main className="flex-1 p-6 ms-28">{children}</main>
           </div>
-      </ThemeProvider>
-    </body>
-  </html>
+        </ThemeProvider>
+      </body>
+    </html>
   );
 }
