@@ -1,16 +1,19 @@
 from src.utils.Logger import Logger
 from src.repositories.JournalsRepository import JournalsRepository
-from src.repositories.JournalsRepository import JournalsRepository
+from src.repositories.UserRepository import UserRepository
 from src.models.Journal import Journal
-from datetime import datetime
+from datetime import datetime, date
 import pytz
 from datetime import timedelta
+import uuid
+
 
 INTERNAL_SERVER_ERROR = {'success': False, 'message': 'Internal server error'}, 500
 
 class JournalsService:
     def __init__(self):
         self.journals_repository = JournalsRepository()
+        self.user_repository = UserRepository()
 
     def get_or_create_today_journal(self, user_id):
         try:
@@ -100,3 +103,35 @@ class JournalsService:
         except Exception as ex:
             Logger.add_to_log("error", f"Error al obtener el journal del día: {ex}")
             raise  # Relanza la excepción para manejarla en el lugar adecuado
+
+    from datetime import date  # Importar date directamente
+
+    def get_journal_for_day(self, user_id, target_date):
+        """
+        Get the journal for a specific day with its mood_journal_intensity.
+        Args:
+            user_id (str, int, UUID): The ID of the user.
+            target_date (datetime.date): The target date as a date object.
+            timezone (str): The user's timezone (default is UTC).
+        Returns:
+            dict: Success status and data with journal details and mood_journal_intensity.
+        """
+        try:
+            if not isinstance(user_id, (str, int, uuid.UUID)):
+                return {"success": False, "error": "Invalid user id, must be a string, integer or UUID"}
+
+            if not isinstance(target_date, date):
+                return {"success": False, "error": "Invalid target_date, must be a datetime.date object"}
+
+            timezone = self.user_repository.get_timezone(user_id=str(user_id))
+            try:
+                tz = pytz.timezone(timezone)
+            except pytz.UnknownTimeZoneError:
+                tz = pytz.timezone("UTC")
+
+            result = self.journals_repository.get_journal_with_intensity(user_id, target_date, str(tz))
+            return result
+
+        except Exception as ex:
+            Logger.add_to_log("error", f"Error en get_journal_for_day: {ex}")
+            return {"success": False, "error": "Internal server error"}

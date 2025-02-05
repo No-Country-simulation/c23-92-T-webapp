@@ -10,10 +10,9 @@ import pytz
 class MoodEvolutionService:
     EMOTIONAL_STATES = {
         1: 'Feliz',
-        2: 'Disgustado o Tenso',
+        2: 'Normal',
         3: 'Triste',
         4: 'Enojado',
-        5: 'Relajado o Cansado'
     }
 
     def __init__(self):
