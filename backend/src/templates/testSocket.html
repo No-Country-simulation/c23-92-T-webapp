@@ -68,10 +68,9 @@
         <label for="emotional-state">Estado de ánimo:</label>
         <select id="emotional-state">
             <option value="1">Feliz</option>
-            <option value="2">Disgustado o Tenso</option>
+            <option value="2">Normal</option>
             <option value="3">Triste</option>
             <option value="4">Enojado</option>
-            <option value="5">Relajado o Cansado</option>
         </select>
         <br>
         <button id="send">Send</button>
@@ -84,6 +83,51 @@
         <button id="get-mood-evolution">Get Mood Evolution</button>
         <button id="get-word-cloud">Get Words Cloud</button>
         <button id="get-mood-proportions">Get Mood Proportions</button>
+        <button id="get-mood-proportions-weekly">Get Mood Proportions Weekly</button>
+        <button id="get-mood-proportions-monthly">Get Mood Proportions Monthly</button>
+        <button id="get-mood-day-evolution">Get Mood Day Evolution</button>
+        <button id="get-journals-streak">Get Journals Streak</button>
+        <button id="get-avg-interactions-per-week-in-current-month">Get average interactions per week in this
+            month</button>
+        <button id="get-emotional-probabilities">Get emotional probabilities for this month</button>
+        <div>
+            <label for="target-date">Fecha (YYYY-MM-DD):</label>
+            <input type="text" id="target-date" placeholder="YYYY-MM-DD">
+            <button id="get-journal-by-date">Obtener Journal por Fecha</button>
+        </div>
+
+        <div>
+            <h3>Actualizar Contraseña</h3>
+            <label for="current-password">Contraseña actual:</label>
+            <input type="password" id="current-password" placeholder="Contraseña actual">
+            <label for="new-password">Nueva contraseña:</label>
+            <input type="password" id="new-password" placeholder="Nueva contraseña">
+            <button id="update-password">Actualizar Contraseña</button>
+        </div>
+
+        <div>
+            <h3>Obtener Información del Usuario</h3>
+            <button id="get-user">Obtener Información</button>
+        </div>
+
+        <div>
+            <h3>Actualizar Perfil</h3>
+            <label for="username">Nombre de usuario:</label>
+            <input type="text" id="username" placeholder="Nombre de usuario">
+            <label for="email">Correo electrónico:</label>
+            <input type="email" id="email" placeholder="Correo electrónico">
+            <label for="timezone">Zona horaria:</label>
+            <input type="text" id="timezone" placeholder="Zona horaria">
+            <button id="update-profile">Actualizar Perfil</button>
+        </div>
+        <div>
+            <h3>Logout</h3>
+            <button id="logout-account">Logout</button>
+        </div>
+        <div>
+            <h3>Eliminar Cuenta</h3>
+            <button id="delete-account">Eliminar Cuenta</button>
+        </div>
     </div>
 
     <div class="response-container" id="response-container"></div>
@@ -216,7 +260,6 @@
             }
         });
 
-        // Emitir evento para obtener las interacciones del día
         document.getElementById("get-interactions").addEventListener("click", () => {
             socket.emit("get_interactions_of_today");
             responseContainer.innerHTML = 'Loading today\'s interactions...<br>';
@@ -241,6 +284,179 @@
             socket.emit("get_mood_proportions");
             responseContainer.innerHTML = 'Loading mood proportions...<br>';
         });
+
+        document.getElementById("get-mood-proportions-weekly").addEventListener("click", () => {
+            socket.emit("get_mood_proportions_weekly");
+            responseContainer.innerHTML = 'Loading mood proportions weekly...<br>';
+        });
+
+        document.getElementById("get-mood-proportions-monthly").addEventListener("click", () => {
+            socket.emit("get_mood_proportions_monthly");
+            responseContainer.innerHTML = 'Loading mood proportions monthly...<br>';
+        });
+
+        document.getElementById("get-mood-day-evolution").addEventListener("click", () => {
+            socket.emit("get_mood_evolution_by_day");
+            responseContainer.innerHTML = 'Loading mood day evolution...<br>';
+        });
+
+        document.getElementById("get-journals-streak").addEventListener("click", () => {
+            socket.emit("get_journals_streak");
+            responseContainer.innerHTML = 'Loading journals streak...<br>';
+        });
+
+        document.getElementById("get-avg-interactions-per-week-in-current-month").addEventListener("click", () => {
+            socket.emit("get_avg_interactions_per_week_in_current_month");
+            responseContainer.innerHTML = 'Loading average interactions per week in this month...<br>';
+        });
+
+        document.getElementById("get-emotional-probabilities").addEventListener("click", () => {
+            socket.emit("get_emotional_probabilities");
+            responseContainer.innerHTML = 'Loading emotional probabilities for this month...<br>';
+        });
+
+        document.getElementById("get-journal-by-date").addEventListener("click", () => {
+            const targetDateInput = document.getElementById("target-date");
+            const targetDate = targetDateInput.value.trim();
+            if (!targetDate) {
+                alert("Por favor, ingresa una fecha válida en formato YYYY-MM-DD.");
+                return;
+            }
+            socket.emit("get_journal_by_date", {
+                target_date: targetDate
+            });
+            responseContainer.innerHTML = 'Cargando journal para la fecha seleccionada...<br>';
+        });
+
+        document.getElementById("update-password").addEventListener("click", () => {
+            const currentPassword = document.getElementById("current-password").value.trim();
+            const newPassword = document.getElementById("new-password").value.trim();
+
+            if (!currentPassword || !newPassword) {
+                alert("Por favor, completa ambos campos.");
+                return;
+            }
+
+            fetch("/api/auth/update-password", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                credentials: "include",
+                body: JSON.stringify({
+                    current_password: currentPassword,
+                    new_password: newPassword,
+                }),
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    const formatted = formatJSON(data);
+                    fadeIn(formatted);
+                    responseContainer.appendChild(formatted);
+                    hljs.highlightAll();
+                })
+                .catch((error) => {
+                    console.error("Error:", error);
+                    responseContainer.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+                });
+        });
+
+        document.getElementById("get-user").addEventListener("click", () => {
+            fetch("/api/auth/get-user", {
+                method: "GET",
+                credentials: "include",
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    const formatted = formatJSON(data);
+                    fadeIn(formatted);
+                    responseContainer.appendChild(formatted);
+                    hljs.highlightAll();
+                })
+                .catch((error) => {
+                    console.error("Error:", error);
+                    responseContainer.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+                });
+        });
+
+        document.getElementById("update-profile").addEventListener("click", () => {
+            const username = document.getElementById("username").value.trim();
+            const email = document.getElementById("email").value.trim();
+            const timezone = document.getElementById("timezone").value.trim();
+
+            if (!username && !email && !timezone) {
+                alert("Por favor, completa al menos un campo.");
+                return;
+            }
+
+            fetch("/api/auth/update-profile", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                credentials: "include",
+                body: JSON.stringify({
+                    username: username,
+                    email: email,
+                    timezone: timezone,
+                }),
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    const formatted = formatJSON(data);
+                    fadeIn(formatted);
+                    responseContainer.appendChild(formatted);
+                    hljs.highlightAll();
+                })
+                .catch((error) => {
+                    console.error("Error:", error);
+                    responseContainer.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+                });
+        });
+
+        document.getElementById("delete-account").addEventListener("click", () => {
+            if (confirm("¿Estás seguro de que deseas eliminar tu cuenta? Esta acción no se puede deshacer.")) {
+                fetch("/api/auth/delete-account", {
+                    method: "DELETE",
+                    credentials: "include",
+                })
+                    .then((response) => response.json())
+                    .then((data) => {
+                        const formatted = formatJSON(data);
+                        fadeIn(formatted);
+                        responseContainer.appendChild(formatted);
+                        hljs.highlightAll();
+                        if (data.success) {
+                            window.location.href = "/login";
+                        }
+                    })
+                    .catch((error) => {
+                        console.error("Error:", error);
+                        responseContainer.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+                    });
+            }
+        });
+
+        document.getElementById("logout-account").addEventListener("click", () => {
+            fetch("/api/auth/logout", {
+                method: "POST",
+                credentials: "include",
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    const formatted = formatJSON(data);
+                    fadeIn(formatted);
+                    responseContainer.appendChild(formatted);
+                    hljs.highlightAll();
+                    if (data.success) {
+                        window.location.href = "/login";
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error:", error);
+                    responseContainer.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+                });
+        })
 
         socket.on("interactions_of_today", (interactions) => {
             if (!interactions) {
@@ -293,20 +509,79 @@
             hljs.highlightAll();
         });
 
+        socket.on("mood_proportions_weekly_data", (data) => {
+            responseContainer.innerHTML = '';
+            const formatted = formatJSON(data);
+            fadeIn(formatted);
+            responseContainer.appendChild(formatted);
+            hljs.highlightAll();
+        });
+
+        socket.on("mood_proportions_monthly_data", (data) => {
+            responseContainer.innerHTML = '';
+            const formatted = formatJSON(data);
+            fadeIn(formatted);
+            responseContainer.appendChild(formatted);
+            hljs.highlightAll();
+        });
+
+        socket.on("mood_evolution_by_day_data", (data) => {
+            responseContainer.innerHTML = '';
+            const formatted = formatJSON(data);
+            fadeIn(formatted);
+            responseContainer.appendChild(formatted);
+            hljs.highlightAll();
+        });
+
+        socket.on("journals_streak_data", (data) => {
+            responseContainer.innerHTML = '';
+            const formatted = formatJSON(data);
+            fadeIn(formatted);
+            responseContainer.appendChild(formatted);
+            hljs.highlightAll();
+        });
+
+        socket.on("avg_interactions_per_week_in_current_month_data", (data) => {
+            responseContainer.innerHTML = '';
+            const formatted = formatJSON(data);
+            fadeIn(formatted);
+            responseContainer.appendChild(formatted);
+            hljs.highlightAll();
+        });
+
+        socket.on("emotional_probabilities_data", (data) => {
+            responseContainer.innerHTML = '';
+            const formatted = formatJSON(data);
+            fadeIn(formatted);
+            responseContainer.appendChild(formatted);
+            hljs.highlightAll();
+        });
+
+        socket.on("journal_by_date_data", (data) => {
+            responseContainer.innerHTML = '';
+            const formatted = formatJSON(data);
+            fadeIn(formatted);
+            responseContainer.appendChild(formatted);
+            hljs.highlightAll();
+        });
+
         socket.on("interaction_response", (response) => {
             switch (response.type) {
-                case 'chunk':
-                    currentResponse += response.data;
+                case 'success':
+                    currentResponse = `
+                    <h3>${response.title}</h3>
+                    <p>${response.response}</p>
+                    `;
                     responseContainer.innerHTML = currentResponse;
-                    responseContainer.scrollTop = responseContainer.scrollHeight;
                     break;
 
-                case 'end':
-                    responseContainer.innerHTML = currentResponse + 
-                        '<p class="end-message">Response completed</p>';
-                    break;
                 case 'error':
                     responseContainer.innerHTML = `<p class="error">Error: ${response.error}</p>`;
+                    break;
+
+                default:
+                    console.error("Tipo de respuesta no reconocido:", response.type);
+                    responseContainer.innerHTML = `<p class="error">Respuesta no reconocida del servidor</p>`;
                     break;
             }
         });
