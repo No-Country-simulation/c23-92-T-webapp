@@ -36,4 +36,4 @@ def verify_token():
         return jsonify({
             'success': False,
             'message': f"Error verifying token: {str(ex)}"
-        }), 500
+        }), 500 

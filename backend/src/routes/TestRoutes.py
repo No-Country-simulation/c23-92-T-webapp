@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template
 from src.middlewares.AuthMiddleware import AuthMiddleware
 
-
+ 
 test_routes = Blueprint('test_routes', __name__, template_folder='../templates')
 
 
@@ -17,4 +17,5 @@ def register():
 
 @test_routes.route('/testSocket')
 def home(**kwargs):
+    print("Rendering testSocket.html")
     return render_template('testSocket.html')

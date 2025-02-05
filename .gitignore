@@ -28,6 +28,7 @@ migrations/
 
 # dependencies
 frontend/node_modules/
+frontend-master/node_modules/
 
 /.pnp
 .pnp.*
@@ -43,6 +44,8 @@ frontend/node_modules/
 # next.js
 frontend/.next/
 frontend/out/
+frontend-master/.next/
+frontend-master/out/
 
 
 # production
@@ -68,6 +71,7 @@ yarn-error.log*
 *.tsbuildinfo
 
 frontend/next-env.d.ts
+frontend-master/next-env.d.ts
 
 
 # cursor
@@ -75,4 +79,5 @@ frontend/next-env.d.ts
 
 
 frontend/package-lock.json
+frontend-master/package-lock.json
 

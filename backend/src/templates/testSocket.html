@@ -1,71 +1,82 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Socket.IO Test</title>
     <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/vs2015.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
     <style>
-        .json-container {
-            background: #1e1e1e;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 20px 0;
-            font-family: 'Courier New', Courier, monospace;
-            white-space: pre-wrap;
-            max-height: 600px;
-            overflow-y: auto;
-            color: #d4d4d4;
-        }
-
-        .hljs {
-            background: transparent !important;
-            padding: 0 !important;
+        .title {
+            padding-left: 20px;
         }
 
         .response-container {
             margin: 20px;
             padding: 15px;
-            border: 1px solid #ddd;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            min-height: 100px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .form {
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            width: 70%;
+        }
+
+        .form label {
+            margin: 10px 0;
+        }
+
+        .form input {
+            padding: 10px;
+            margin: 10px 0;
+        }
+
+        .form button {
+            padding: 10px;
+            margin: 10px 0;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
         }
 
         .error {
-            color: #ff4444;
+            color: red;
         }
 
         .end-message {
-            color: #00C851;
+            color: green;
+            font-style: italic;
         }
 
-        button {
-            background: #007acc;
-            color: white;
-            border: none;
-            padding: 2px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-block: .5rem;
-            font-family: Arial, sans-serif;
-            font-size: 14px;
+        .textarea {
+            margin: 20px;
         }
 
-        button:hover {
-            background: #0062a3;
+        textarea {
+            padding: 20px;
         }
     </style>
 </head>
-
 <body>
     <h1 class="title">MIA</h1>
     <h2 class="title">Socket.IO Client</h2>
 
     <div class="textarea">
-        <textarea id="message" rows="5" cols="40" placeholder="Write your message here..."></textarea>
+        <textarea 
+            id="message" 
+            rows="5" 
+            cols="40" 
+            placeholder="Write your message"
+        ></textarea>
         <br>
         <label for="emotional-state">Estado de ánimo:</label>
+        
         <select id="emotional-state">
             <option value="1">Feliz</option>
             <option value="2">Disgustado o Tenso</option>
@@ -77,57 +88,16 @@
         <button id="send">Send</button>
     </div>
 
-    <!-- Botones para solicitar interacciones y journals -->
-    <div>
-        <button id="get-interactions">Get Today's Interactions</button>
-        <button id="get-journals">Get All Journals</button>
-        <button id="get-mood-evolution">Get Mood Evolution</button>
-        <button id="get-word-cloud">Get Words Cloud</button>
-        <button id="get-mood-proportions">Get Mood Proportions</button>
-    </div>
-
     <div class="response-container" id="response-container"></div>
 
     <script>
-        verifyToken();
-
-        function addCopyButton(preElement) {
-            const button = document.createElement('button');
-            button.textContent = 'Copiar';
-            button.style.position = 'absolute';
-            button.style.right = '10px';
-            button.style.top = '10px';
-            button.addEventListener('click', () => {
-                navigator.clipboard.writeText(preElement.textContent);
-                button.textContent = '¡Copiado!';
-                setTimeout(() => button.textContent = 'Copiar', 2000);
-            });
-            preElement.style.position = 'relative';
-            preElement.appendChild(button);
-        }
-
-        function formatJSON(data) {
-            const formatted = JSON.stringify(data, null, 2);
-            const pre = document.createElement('pre');
-            pre.className = 'json-container';
-            pre.innerHTML = `<code class="language-json">${formatted}</code>`;
-            addCopyButton(pre);
-            return pre;
-        }
-
-        function fadeIn(element) {
-            element.style.opacity = 0;
-            element.style.transition = 'opacity 0.3s ease-in';
-            setTimeout(() => element.style.opacity = 1, 10);
-        }
-
         function getCookie(name) {
             const value = `; ${document.cookie}`;
             const parts = value.split(`; ${name}=`);
             if (parts.length === 2) return parts.pop().split(';').shift();
         }
 
-        const socket = io("http://localhost:5000", {
+        const socket = io("http://127.0.0.1:5000", {
             withCredentials: true,
             transports: ['websocket']
         });
@@ -156,50 +126,31 @@
             window.location.href = '/login';
         });
 
-        function verifyToken() {
-            fetch('/api/token/verify_token', {
-                method: 'GET',
-                credentials: 'include'  // Incluir cookies en la solicitud
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        console.log('Token is valid, loading page...');
-                    } else {
-                        console.error('Token is invalid or expired, redirecting to login...');
-                        window.location.href = '/login';  // Redirigir al login
-                    }
-                })
-                .catch(error => {
-                    console.error('Error verifying token:', error);
-                    window.location.href = '/login';  // Redirigir al login si hay un error
-                });
-        }
-
         function refreshToken() {
             fetch('/api/token/refresh_token', {
                 method: 'POST',
                 credentials: 'include'
             })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        console.log('Token refreshed successfully');
-                    } else {
-                        console.error('Failed to refresh token');
-                        responseContainer.innerHTML = `<p class="error">Failed to refresh token</p>`;
-                    }
-                })
-                .catch(error => {
-                    console.error('Error refreshing token:', error);
-                    responseContainer.innerHTML = `<p class="error">Error refreshing token: ${error.message}</p>`;
-                });
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('Token refreshed successfully');
+                    window.location.reload();
+                } else {
+                    console.error('Failed to refresh token');
+                    responseContainer.innerHTML = `<p class="error">Failed to refresh token</p>`;
+                }
+            })
+            .catch(error => {
+                console.error('Error refreshing token:', error);
+                responseContainer.innerHTML = `<p class="error">Error refreshing token: ${error.message}</p>`;
+            });
         }
 
         document.getElementById("send").addEventListener("click", () => {
             const messageInput = document.getElementById("message");
             const emotionalStateSelect = document.getElementById("emotional-state");
-
+            
             const message = messageInput.value.trim();
             const emotionalState = emotionalStateSelect.value;
 
@@ -207,8 +158,8 @@
                 responseContainer.innerHTML = 'Waiting for response...<br>';
                 currentResponse = "";
 
-                socket.emit("generate_interaction", {
-                    content: message,
+                socket.emit("generate_interaction", { 
+                    content: message, 
                     state: parseInt(emotionalState)
                 });
                 console.log('Sent:', message, 'Emotional State:', emotionalState);
@@ -216,107 +167,36 @@
             }
         });
 
-        // Emitir evento para obtener las interacciones del día
-        document.getElementById("get-interactions").addEventListener("click", () => {
-            socket.emit("get_interactions_of_today");
-            responseContainer.innerHTML = 'Loading today\'s interactions...<br>';
-        });
-
-        document.getElementById("get-journals").addEventListener("click", () => {
-            socket.emit("get_all_journals");
-            responseContainer.innerHTML = 'Loading all journals...<br>';
-        });
-
-        document.getElementById("get-mood-evolution").addEventListener("click", () => {
-            socket.emit("get_mood_evolution");
-            responseContainer.innerHTML = 'Loading mood evolution...<br>';
-        });
-
-        document.getElementById("get-word-cloud").addEventListener("click", () => {
-            socket.emit("get_word_cloud");
-            responseContainer.innerHTML = 'Loading word cloud...<br>';
-        });
-
-        document.getElementById("get-mood-proportions").addEventListener("click", () => {
-            socket.emit("get_mood_proportions");
-            responseContainer.innerHTML = 'Loading mood proportions...<br>';
-        });
-
-        socket.on("interactions_of_today", (interactions) => {
-            if (!interactions) {
-                console.error('Error: No response received from server');
-                responseContainer.innerHTML = `<p class="error">Error: No response received from server</p>`;
-                return;
-            }
-
-            if (interactions.error) {
-                console.error('Error:', interactions.error);
-                responseContainer.innerHTML = `<p class="error">Error: ${interactions.error}</p>`;
-            } else {
-                responseContainer.innerHTML = '';
-                const formatted = formatJSON(interactions);
-                fadeIn(formatted);
-                responseContainer.appendChild(formatted);
-                hljs.highlightAll();
-            }
-        });
-
-        socket.on("all_journals", (journals) => {
-            responseContainer.innerHTML = '';
-            const formatted = formatJSON(journals);
-            fadeIn(formatted);
-            responseContainer.appendChild(formatted);
-            hljs.highlightAll();
-        });
-
-        socket.on("mood_evolution_data", (data) => {
-            responseContainer.innerHTML = '';
-            const formatted = formatJSON(data);
-            fadeIn(formatted);
-            responseContainer.appendChild(formatted);
-            hljs.highlightAll();
-        });
-
-        socket.on("word_cloud_data", (data) => {
-            responseContainer.innerHTML = '';
-            const formatted = formatJSON(data);
-            fadeIn(formatted);
-            responseContainer.appendChild(formatted);
-            hljs.highlightAll();
-        });
-
-        socket.on("mood_proportions_data", (data) => {
-            responseContainer.innerHTML = '';
-            const formatted = formatJSON(data);
-            fadeIn(formatted);
-            responseContainer.appendChild(formatted);
-            hljs.highlightAll();
-        });
-
         socket.on("interaction_response", (response) => {
-            switch (response.type) {
+            console.log('Received:', response);
+            
+            switch(response.type) {
                 case 'chunk':
                     currentResponse += response.data;
                     responseContainer.innerHTML = currentResponse;
                     responseContainer.scrollTop = responseContainer.scrollHeight;
                     break;
-
+                    
                 case 'end':
                     responseContainer.innerHTML = currentResponse + 
                         '<p class="end-message">Response completed</p>';
                     break;
+                    
                 case 'error':
-                    responseContainer.innerHTML = `<p class="error">Error: ${response.error}</p>`;
+                    responseContainer.innerHTML = 
+                        `<p class="error">Error: ${response.error}</p>`;
                     break;
+                    
+                default:
+                    console.log('Unknown response type:', response);
             }
         });
 
         socket.on('connect_error', (error) => {
             console.error('Connection error:', error);
-            responseContainer.innerHTML =
+            responseContainer.innerHTML = 
                 `<p class="error">Connection error: ${error.message}</p>`;
         });
     </script>
 </body>
-
 </html>
