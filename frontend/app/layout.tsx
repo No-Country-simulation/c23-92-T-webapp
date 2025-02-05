@@ -2,14 +2,14 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Sidebar from "@/components/navigation/sidebar";
-
 import { ThemeProvider } from "@/components/theme-provider";
+import { BottomNav } from "@/components/navigation/bottom-nav";
+import DeviceDetector from "@/lib/hooks/DeviceDetector";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
-
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
@@ -27,25 +27,28 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-    <body
-      className={`${geistSans.variable} ${geistMono.variable} antialiased p-10`}
-    >
-      <ThemeProvider attribute="class" defaultTheme="system">
-      <div className="flex relative min-h-screen max-w-screen-xl m-auto 
-                    bg-[#F6F4FA]
-                    rounded-3xl">
-            {/* Sidebar */}
-            <aside className="relative">
-              <Sidebar />
-            </aside>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased p-10`}
+      >
+        <ThemeProvider attribute="class" defaultTheme="system">
+          <DeviceDetector>
+            <div className="flex relative min-h-screen max-w-screen-xl m-auto bg-[#F6F4FA] rounded-3xl">
+              {/* Mostrar Sidebar solo en escritorio */}
+              <aside className="relative hidden-if-mobile">
+                <Sidebar />
+              </aside>
 
-            {/* Contenido principal */}
-            <main className="flex-1 p-6 ms-28">
-              {children}
-            </main>
-          </div>
-      </ThemeProvider>
-    </body>
-  </html>
+              {/* Contenido principal */}
+              <main className="flex-1 p-6 data-[is-mobile=true]:ms-0">
+                {children}
+              </main>
+
+              {/* Mostrar BottomNav solo en móviles */}
+              <BottomNav className="block-if-mobile" />
+            </div>
+          </DeviceDetector>
+        </ThemeProvider>
+      </body>
+    </html>
   );
 }

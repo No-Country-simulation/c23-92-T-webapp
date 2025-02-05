@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,14 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
-import { useJournalStore } from "@/lib/stores/journal-store";
 import { MOODS, MoodType } from "@/lib/constants/moods";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import socket from "@/lib/socket"; // Importa el cliente de Socket.IO
+import { useJournalStore } from "@/lib/stores/journal-store";
+
 
 const getMoodButtonClass = (moodId: MoodType, isSelected: boolean) => {
   if (!isSelected) return "bg-secondary hover:bg-secondary/80";
-
   switch (moodId) {
     case "happy":
       return "bg-green-500 dark:bg-green-600";
@@ -33,21 +33,30 @@ export default function NewJournalPage() {
   const router = useRouter();
   const [content, setContent] = useState("");
   const [selectedMood, setSelectedMood] = useState<MoodType | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const setCurrentEntry = useJournalStore((state) => state.setCurrentEntry);
 
   const handleSubmit = async () => {
-    if (!selectedMood) return;
+    if (!selectedMood || !content) return;
 
+    setIsLoading(true);
     try {
-      const entry = {
-        content,
+      const newEntry = {
         mood: selectedMood,
-        timestamp: new Date().toISOString(),
-      };
+        content,
+      }
 
-      useJournalStore.getState().setCurrentEntry(entry);
-      router.push(`/ia-feedback`);
+      setCurrentEntry(newEntry);
+
+      socket.emit("generate_interaction", {
+        content,
+        state: MOODS.find((mood) => mood.id === selectedMood)?.value ?? 1,
+      });
+
+      router.push("/ia-feedback");
     } catch (error) {
-      console.error("Error al guardar la entrada:", error);
+      console.error("Error al enviar la interacción:", error);
+      setIsLoading(false);
     }
   };
 
@@ -64,7 +73,6 @@ export default function NewJournalPage() {
                 <h1 className="text-lg font-semibold">Volver</h1>
               </Link>
             </div>
-
             <div className="space-y-4">
               <h2 className="text-lg font-medium">¿Cómo te sientes hoy?</h2>
               <div className="flex gap-3">
@@ -90,7 +98,6 @@ export default function NewJournalPage() {
               </div>
             </div>
           </CardHeader>
-
           <CardContent className="space-y-6">
             <div className="space-y-4">
               <h2 className="text-lg font-medium">
@@ -103,13 +110,12 @@ export default function NewJournalPage() {
                 className="min-h-[550px] resize-none text-base"
               />
             </div>
-
             <Button
               onClick={handleSubmit}
               className="w-full py-6 text-lg"
-              disabled={!selectedMood || !content}
+              disabled={!selectedMood || !content || isLoading}
             >
-              Guardar entrada
+              {isLoading ? "Enviando..." : "Guardar entrada"}
             </Button>
           </CardContent>
         </Card>

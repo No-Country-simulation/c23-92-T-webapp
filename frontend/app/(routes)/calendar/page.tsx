@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +14,7 @@ import { BottomNav } from "@/components/navigation/bottom-nav";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Navbar } from "@/components/navbar/Navbar";
+import socket from "@/lib/socket";
 
 type DayData = {
   mood: keyof typeof moodColors;
@@ -46,6 +47,26 @@ const monthStats = {
   streakDays: 5,
 };
 
+interface JournalDate {
+  success: boolean;
+  date: string;
+}
+
+interface JournalData {
+  date_journal: string;
+  interactions_count: number;
+  mood_journal_intensity: number;
+  interactions: string;
+}
+
+interface Interactions {
+  title: string;
+  content: string;
+  response: string;
+  date_interaction: string;
+  state_interaction: string;
+}
+
 export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -71,6 +92,13 @@ export default function CalendarPage() {
       new Date(currentMonth.setMonth(currentMonth.getMonth() + 1))
     );
   };
+
+  const getDayData = (date: string) => {
+    socket.emit("get_journal_by_date");
+    socket.on("journal_by_date", (data) => {
+      console.log(data);
+    });
+  }
 
   return (
     <div className="min-h-screen bg-background pt-20 pb-24">
@@ -211,8 +239,6 @@ export default function CalendarPage() {
             </div>
           </CardContent>
         </Card>
-
-        <BottomNav />
       </div>
     </div>
   );

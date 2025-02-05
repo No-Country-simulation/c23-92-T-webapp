@@ -144,7 +144,6 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-background pt-20 pb-24">
-      <Navbar />
       <div className="max-w-3xl mx-auto px-4">
         <div className="space-y-6">
           {settingsSections.map((section, sectionIndex) => (
@@ -179,8 +178,6 @@ export default function SettingsPage() {
             </motion.div>
           ))}
         </div>
-
-        <BottomNav />
       </div>
     </div>
   );
