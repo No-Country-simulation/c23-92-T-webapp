@@ -3,7 +3,6 @@ from sqlalchemy.dialects.postgresql import UUID
 from extensions import db
 from sqlalchemy import Column, Text, Date
 from datetime import datetime
-import hashlib
 
 class Token(db.Model):
     __tablename__ = 'tokens'
