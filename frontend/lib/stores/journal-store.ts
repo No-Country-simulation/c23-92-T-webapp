@@ -1,6 +1,9 @@
 import { create } from "zustand";
-import { JournalEntry } from "@/lib/api";
-import { MoodType } from "@/lib/constants/moods";
+
+interface JournalEntry {
+  mood: string;
+  content: string;
+}
 
 interface JournalStore {
   currentEntry: JournalEntry | null;
