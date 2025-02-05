@@ -28,9 +28,9 @@ def register_interactions_events(socketio):
             if not content or not state:
                 print(f"Missing content or state: content={content}, state={state}")
                 emit(EVENT_INTERACTION_RESPONSE, {
-                    "type": "error",
+                    "success": False,
                     "error": "Content and state are required",
-                    "status": "error"
+                    "type": "error"
                 })
                 return
             
@@ -42,17 +42,22 @@ def register_interactions_events(socketio):
                 user_id=user_id,
                 state=state,
                 content=content,
-                socketio=socketio,
-                event_name=EVENT_INTERACTION_RESPONSE
             )
+
+            emit(EVENT_INTERACTION_RESPONSE, {
+                "type": "success",
+                "title": response["title"],
+                "response": response["response"],
+                "success": response["success"]
+            })
 
             print(f"Title: {response['title']}", f"Response: {response['response']}")
 
         except Exception as ex:
             Logger.add_to_log("error", str(ex))
             emit(EVENT_INTERACTION_RESPONSE, {
-                "type": "error",
-                "error": "Internal server error",
-                "status": "error"
+                "success": False,
+                "error": "An error occurred while generating the interaction",
+                "type": "error"
             })
             return
