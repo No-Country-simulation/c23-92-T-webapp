@@ -8,14 +8,14 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { useJournalStore } from "@/lib/stores/journal-store";
-import { MOODS, MoodType } from "@/lib/constants/moods";
+import { MOODS, MoodKey } from "@/lib/constants/moods";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 
-const getMoodButtonClass = (moodId: MoodType, isSelected: boolean) => {
+const getMoodButtonClass = (mood: MoodKey, isSelected: boolean) => {
   if (!isSelected) return "bg-secondary hover:bg-secondary/80";
 
-  switch (moodId) {
+  switch (mood) {
     case "happy":
       return "bg-green-500 dark:bg-green-600";
     case "neutral":
@@ -32,7 +32,7 @@ const getMoodButtonClass = (moodId: MoodType, isSelected: boolean) => {
 export default function NewJournalPage() {
   const router = useRouter();
   const [content, setContent] = useState("");
-  const [selectedMood, setSelectedMood] = useState<MoodType | null>(null);
+  const [selectedMood, setSelectedMood] = useState<MoodKey | null>(null);
 
   const handleSubmit = async () => {
     if (!selectedMood) return;
@@ -68,23 +68,17 @@ export default function NewJournalPage() {
             <div className="space-y-4">
               <h2 className="text-lg font-medium">¿Cómo te sientes hoy?</h2>
               <div className="flex gap-3">
-                {MOODS.map((mood) => (
+              {Object.entries(MOODS).map(([key, mood]) => (
                   <button
-                    key={mood.id}
-                    onClick={() => setSelectedMood(mood.id)}
+                    key={key}
+                    onClick={() => setSelectedMood(key as MoodKey)}
                     className={cn(
                       "p-4 rounded-xl transition-all",
-                      getMoodButtonClass(mood.id, selectedMood === mood.id),
-                      selectedMood === mood.id && "text-white scale-105"
+                      getMoodButtonClass(key as MoodKey, selectedMood === key),
+                      selectedMood === key && "text-white scale-105"
                     )}
                   >
-                    <Image
-                      src={mood.image}
-                      alt={mood.label}
-                      width={32}
-                      height={32}
-                      className="w-8 h-8"
-                    />
+                    {mood.icon}
                   </button>
                 ))}
               </div>

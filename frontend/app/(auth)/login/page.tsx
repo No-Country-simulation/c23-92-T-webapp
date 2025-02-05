@@ -60,7 +60,7 @@ export default function LoginPage() {
       setError("Error al iniciar sesión. Verifica tus credenciales.");
     }
   };
-
+ 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <motion.div

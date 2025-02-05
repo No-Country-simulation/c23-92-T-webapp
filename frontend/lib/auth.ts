@@ -1,4 +1,5 @@
 import { apiRequest } from "@/lib/api";
+import { connectSocket, disconnectSocket } from "@/lib/socket";
 
 export async function login(username: string, password: string) {
     const response = await apiRequest("/auth/login", "POST", { username, password });
@@ -6,6 +7,8 @@ export async function login(username: string, password: string) {
     if (!response.success) {
         throw new Error(response.message ?? "Login failed");
     }
+    
+    connectSocket();
 
     return response.data;
 }
