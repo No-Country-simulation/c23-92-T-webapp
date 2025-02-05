@@ -1,47 +1,45 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { IAFeedbackCard } from "@/components/ia-feedback-card";
 import { useJournalStore } from "@/lib/stores/journal-store";
+import socket, { InteractionResponse } from "@/lib/socket";
 
 export default function IAFeedbackPage() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
   const currentEntry = useJournalStore((state) => state.currentEntry);
   const clearCurrentEntry = useJournalStore((state) => state.clearCurrentEntry);
-  const [iaFeedback, setIaFeedback] = useState<string>("");
+
+  const [responseData, setResponseData] = useState<{
+    title: string;
+    iaFeedback: string;
+  } | null>(null);
 
   useEffect(() => {
-    const generateFeedback = async () => {
-      if (!currentEntry) {
-        setIsLoading(false);
-        return;
-      }
+    if (!currentEntry) return;
 
-      // Simulamos la generación de feedback (implementar después con la API)
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setIaFeedback(
-        "Basado en tu entrada, noto un estado de ánimo positivo. Es importante mantener este optimismo y seguir cultivando las actividades que te hacen sentir bien."
-      );
-      setIsLoading(false);
+    const handleInteractionResponse = (response: InteractionResponse) => {
+      if (response.type === "success" && response.success === true) {
+        setResponseData({
+          title: response.title ?? "Título predeterminado",
+          iaFeedback: response.response ?? "",
+        });
+      } else {
+        console.error("Error al recibir la respuesta de la interacción:", response.error);
+      }
     };
 
-    generateFeedback();
+    socket.on("interaction_response", handleInteractionResponse);
+
+    return () => {
+      socket.off("interaction_response", handleInteractionResponse);
+    };
   }, [currentEntry]);
 
   const handleContinue = () => {
     clearCurrentEntry();
     router.push("/dashboard");
   };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
 
   if (!currentEntry) {
     return (
@@ -60,12 +58,19 @@ export default function IAFeedbackPage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-3xl mx-auto px-4">
-        <IAFeedbackCard
-          mood={currentEntry.mood || ""}
-          content={currentEntry.content}
-          iaFeedback={iaFeedback}
-          onContinue={handleContinue}
-        />
+        {responseData ? (
+          <IAFeedbackCard
+            mood={currentEntry.mood || ""}
+            content={currentEntry.content}
+            iaFeedback={responseData.iaFeedback}
+            title={responseData.title}
+            onContinue={handleContinue}
+          />
+        ) : (
+          <div className="min-h-screen flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        )}
       </div>
     </div>
   );

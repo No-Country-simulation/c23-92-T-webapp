@@ -33,3 +33,53 @@ export const verifyToken = async (): Promise<boolean> => {
         return false;
     }
 };
+
+export async function logout() {
+    const response = await apiRequest("/auth/logout", "POST");
+
+    if (!response.success) {
+        throw new Error(response.message ?? "Logout failed");
+    }
+
+    return response.data;
+}
+
+export async function getProfile() {
+    const response = await apiRequest("/auth/get-user", "GET");
+
+    if (!response.success) {
+        throw new Error(response.message ?? "Error fetching profile data");
+    }
+
+    return response.data;
+}
+
+export async function updateProfile(profile: { username: string; email: string; timezone: string }) {
+    const response = await apiRequest("/auth/update-user", "PUT", profile);
+
+    if (!response.success) {
+        throw new Error(response.message ?? "Error updating profile");
+    }
+
+    return response.data;
+}
+
+export async function changePassword(currentPassword: string, newPassword: string) {
+    const response = await apiRequest("/auth/change-password", "POST", { currentPassword, newPassword });
+
+    if (!response.success) {
+        throw new Error(response.message ?? "Error changing password");
+    }
+
+    return response.data;
+}
+
+export async function deleteAccount() {
+    const response = await apiRequest("/auth/delete-account", "DELETE");
+
+    if (!response.success) {
+        throw new Error(response.message ?? "Error deleting account");
+    }
+
+    return response.data;
+}

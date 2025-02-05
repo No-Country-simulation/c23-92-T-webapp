@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, make_response, Response
 from src.services.AuthService import AuthService
-from src.repositories.UserRepository import UserRepository
+from src.services.UserService import UserService
 from src.utils.Logger import Logger
 from src.utils.Security import Security
 import traceback
@@ -9,6 +9,7 @@ from src.middlewares.AuthMiddleware import AuthMiddleware
 auth_routes = Blueprint('auth_routes', __name__)
 
 auth_service = AuthService()
+user_service = UserService()
 
 @auth_routes.route('/login', methods=['POST'])
 def login():
@@ -76,7 +77,6 @@ def logout(user_id, device_id):
         response = auth_service.logout_user(user_id, device_id)
 
         response = make_response(jsonify(response), 200)
-        response.set_cookie('token', '', expires=0)
 
         return response
     except Exception as ex:
@@ -86,3 +86,87 @@ def logout(user_id, device_id):
             'success': False,
             'message': 'Logout failed'
         }), 500
+    
+@auth_routes.route('/update-password', methods=['POST'])
+@AuthMiddleware.require_auth
+def update_password(user_id, device_id):
+    try:
+        data = request.get_json()
+
+        if not data:
+            return jsonify({'success': False, 'message': 'No data provided'}), 400
+
+        current_password = data.get('current_password')
+        new_password = data.get('new_password')
+
+        response = auth_service.change_password(user_id, current_password, new_password)
+
+        if 'success' in response and response['success']:
+            return jsonify(response), 200
+        else:
+            return jsonify(response), 400
+
+    except Exception as ex:
+        Logger.add_to_log("error", str(ex))
+        Logger.add_to_log("error", traceback.format_exc())
+        return jsonify({'success': False, 'message': "Internal server error"}), 500
+    
+@auth_routes.route('/get-user', methods=['GET'])
+@AuthMiddleware.require_auth
+def get_user(user_id, device_id):
+    try:
+        user = auth_service.get_profile(user_id)
+
+        if 'success' in user and user['success']:
+            return jsonify(user), 200
+        else:
+            return jsonify(user), 400
+
+    except Exception as ex:
+        Logger.add_to_log("error", str(ex))
+        Logger.add_to_log("error", traceback.format_exc())
+        return jsonify({'success': False, 'message': "Internal server error"}), 500
+    
+@auth_routes.route('/update-profile', methods=['POST'])
+@AuthMiddleware.require_auth
+def update_profile(user_id, device_id):
+    try:
+        data = request.get_json()
+
+        if not data:
+            return jsonify({'success': False, 'message': 'No data provided'}), 400
+
+        username = data.get('username')
+        email = data.get('email')
+        timezone = data.get('timezone')
+
+        if not username and not email and not timezone:
+            return jsonify({'success': False, 'message': 'No data provided, username, email or timezone not provided'}), 400
+
+        response = auth_service.update_profile(user_id, device_id, username, email, timezone)
+
+        if 'success' in response and response['success']:
+            return jsonify(response), 200
+        else:
+            return jsonify(response), 400
+
+    except Exception as ex:
+        Logger.add_to_log("error", str(ex))
+        Logger.add_to_log("error", traceback.format_exc())
+        return jsonify({'success': False, 'message': "Internal server error"}), 500
+    
+@auth_routes.route('/delete-account', methods=['DELETE'])
+@AuthMiddleware.require_auth
+def delete_account(user_id, device_id):
+    try:
+        response = user_service.delete_account(user_id)
+
+        if 'success' in response and response['success']:
+            return jsonify(response), 200
+        else:
+            return jsonify(response), 400
+
+    except Exception as ex:
+        Logger.add_to_log("error", str(ex))
+        Logger.add_to_log("error", traceback.format_exc())
+        return jsonify({'success': False, 'message': "Internal server error"}), 500

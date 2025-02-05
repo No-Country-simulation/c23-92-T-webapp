@@ -82,3 +82,14 @@ body {
   }
 }
 
+[data-is-mobile='true'] .hidden-if-mobile {
+  display: none;
+}
+
+[data-is-mobile='true'] .block-if-mobile {
+  display: block;
+}
+
+[data-is-mobile='false'] .block-if-mobile {
+  display: none;
+}

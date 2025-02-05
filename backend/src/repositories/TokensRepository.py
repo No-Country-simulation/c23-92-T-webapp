@@ -9,6 +9,10 @@ class TokensRepository:
         db.session.add(token)
         db.session.commit()
 
+    def delete_all_by_user_id(self, user_id: str):
+        db.session.query(Token).filter(Token.user_id == user_id).delete()
+        db.session.commit()
+
     def find_active_token_by_user_and_device(self, user_id: str, device_id: str):
         return db.session.query(Token).filter(Token.user_id == user_id, Token.device_id == device_id, Token.is_revoked == False).first()
 

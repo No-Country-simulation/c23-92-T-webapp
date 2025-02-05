@@ -9,10 +9,9 @@ load_dotenv()
 class OpenAIService:
     EMOTIONAL_STATES = {
         1: 'Feliz',
-        2: 'Disgustado o Tenso',
+        2: 'Normal',
         3: 'Triste',
         4: 'Enojado',
-        5: 'Relajado o Cansado'
     }
 
     CLIENT_NAME = "gpt-3.5-turbo"
@@ -32,7 +31,7 @@ class OpenAIService:
         Returns:
             Generator: The OpenAI response stream.
         """
-        return self.client.chat.completions.create(
+        response = self.client.chat.completions.create(
             model=self.CLIENT_NAME,
             messages=[
                 {"role": "system", "content": (
@@ -47,8 +46,9 @@ class OpenAIService:
             ],
             max_tokens=200,
             temperature=0.7,
-            stream=True
         )
+
+        return response.choices[0].message.content.strip()
     
     def _is_incomprehensible(self, content):
         """
@@ -126,39 +126,7 @@ class OpenAIService:
         )
         return str(title_response.choices[0].message.content).strip()
 
-    def _process_response(self, response, socketio=None, event_name=None):
-        """
-        Process the OpenAI response and emit chunks if a socket is provided.
-        
-        Args:
-            response (Generator): The OpenAI response stream.
-            socket: The WebSocket connection (optional).
-            event_name: The WebSocket event name (optional).
-        
-        Returns:
-            str: The full response.
-        """
-        full_response = ""
-        for chunk in response:
-            if chunk.choices and chunk.choices[0].delta:
-                message_part = chunk.choices[0].delta.content
-                if message_part:
-                    full_response += message_part
-                    if socketio and event_name:
-                        socketio.emit(event_name, {
-                            "type": "chunk",
-                            "data": message_part,
-                            "status": "streaming"
-                        })
-        if socketio and event_name:
-            socketio.emit(event_name, {
-                "type": "end",
-                "data": full_response,
-                "status": "complete"
-            })
-        return full_response
-
-    def response(self, user_id, state, content, socketio=None, event_name=None):
+    def response(self, user_id, state, content):
         """
         Generate a response using OpenAI and save the interaction.
         
@@ -181,8 +149,7 @@ class OpenAIService:
             
             emotional_state = self.EMOTIONAL_STATES[state]
             mood_intensity = self._calculate_mood_intensity(emotional_state, content)
-            response = self._generate_openai_response(emotional_state, content)
-            full_response = self._process_response(response, socketio, event_name)
+            full_response = self._generate_openai_response(emotional_state, content)
 
             title = self._generate_title(emotional_state, content, full_response)
             self.interactions_service.create_interaction(user_id=user_id, title=title, state=state, content=content, response=full_response, mood_intensity=mood_intensity)

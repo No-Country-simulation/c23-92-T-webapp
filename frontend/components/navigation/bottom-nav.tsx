@@ -1,5 +1,4 @@
 "use client";
-
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -28,17 +27,24 @@ const navItems = [
   },
 ];
 
-export function BottomNav() {
-  const pathname = usePathname();
+interface BottomNavProps {
+  className?: string;
+}
 
+export function BottomNav({ className }: Readonly<BottomNavProps>) {
+  const pathname = usePathname();
   return (
-    <div className="fixed bottom-4 left-0 right-0 z-50 px-4">
+    <div
+      className={cn(
+        "fixed bottom-4 left-0 right-0 z-50 px-4",
+        className
+      )}
+    >
       <div className="max-w-3xl mx-auto">
         <nav className="bg-card/80 dark:bg-card/80 backdrop-blur-sm rounded-full h-14 flex justify-around items-center shadow-lg border border-border">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
             const Icon = item.icon;
-
             return (
               <Link
                 key={item.href}

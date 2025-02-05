@@ -50,3 +50,22 @@ class InteractionsRepository:
             .order_by(Interactions.date_interaction.desc())
             .all()
         )
+    
+    def get_interactions_in_range(self, user_id, start_date, end_date):
+        return (
+            db.session.query(Interactions)
+            .join(Journal, Journal.id == Interactions.journal_id)
+            .filter(Journal.user_id == user_id)
+            .filter(Interactions.date_interaction >= start_date)
+            .filter(Interactions.date_interaction <= end_date)
+            .all()
+        )
+    
+    def get_interactions_by_date(self, user_id, date):
+        return (
+            db.session.query(Interactions)
+            .join(Journal, Journal.id == Interactions.journal_id)
+            .filter(Journal.user_id == user_id)
+            .filter(func.date(Interactions.date_interaction) == date)
+            .all()
+        )
