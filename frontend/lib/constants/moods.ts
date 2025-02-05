@@ -10,6 +10,7 @@ export const MOODS = [
     label: "Feliz",
     color: "green",
     gradient: "from-green-100 to-transparent dark:from-green-950/50",
+    value: 1
   },
   {
     id: "neutral",
@@ -17,6 +18,7 @@ export const MOODS = [
     label: "Neutral",
     color: "yellow",
     gradient: "from-yellow-100 to-transparent dark:from-yellow-950/50",
+    value: 2
   },
   {
     id: "sad",
@@ -24,6 +26,7 @@ export const MOODS = [
     label: "Triste",
     color: "blue",
     gradient: "from-blue-100 to-transparent dark:from-blue-950/50",
+    value: 3
   },
   {
     id: "angry",
@@ -31,6 +34,7 @@ export const MOODS = [
     label: "Enojado",
     color: "red",
     gradient: "from-red-100 to-transparent dark:from-red-950/50",
+    value: 4
   },
 ] as const;
 
