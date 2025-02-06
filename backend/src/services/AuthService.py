@@ -123,28 +123,33 @@ class AuthService():
                     'success': False,
                     'message': USER_NOT_FOUND
                 }
-            
+
+            if not old_password or not new_password:
+                return {
+                    'success': False,
+                    'message': 'Both current_password and new_password are required'
+                }
+
             if not user.check_password(old_password):
                 return {
                     'success': False,
                     'message': 'Incorrect current password'
                 }
-            
+
             if len(new_password) < 8:
                 return {
                     'success': False,
                     'message': 'Password must be at least 8 characters long'
                 }
-            
+
             result = self._validate_password(new_password)
             if not result:
                 return {
                     'success': False,
                     'message': 'Password must contain at least one uppercase letter, one lowercase letter, one number and one special character'
                 }
-            
-            password_changed = self.user_repository.update_password(user_id, new_password)
 
+            password_changed = self.user_repository.update_password(user_id, new_password)
             if not password_changed:
                 return {
                     'success': False,
@@ -155,14 +160,15 @@ class AuthService():
                 'success': True,
                 'message': 'Password updated successfully'
             }
+
         except Exception as ex:
             Logger.add_to_log("error", str(ex))
             Logger.add_to_log("error", traceback.format_exc())
             return {
                 'success': False,
-                'message': 'Password changed failed'
+                'message': 'Password change failed'
             }
-        
+
             
     def get_profile(self, user_id: int):
         try:
@@ -183,24 +189,23 @@ class AuthService():
                 'success': False,
                 'error': INTERNAL_SERVER_ERROR
             }
-        
+
     def update_profile(self, user_id, device_id, username, email, timezone):
         try:
             user = self.user_repository.get_by_id(user_id)
             if not user:
                 return {
                     'success': False,
-                    'error': USER_NOT_FOUND
+                    'error': "User not found"
                 }
-            
+
             if not all([username, email, timezone]):
                 return {'success': False, 'message': 'Username, email and timezone are required'}
 
-            username = username.strip()
-            username = username.lower()
+            username = username.strip().lower()
             email = email.strip()
             timezone = timezone.strip()
-            
+
             if not (3 <= len(username) <= 20):
                 return {'success': False, 'message': 'Username must be between 3 and 20 characters'}
 
@@ -208,51 +213,54 @@ class AuthService():
             if not re.match(email_pattern, email):
                 return {'success': False, 'message': 'Invalid email format'}
 
-            if self.user_repository.get_user_by_username(username):
+            user_username_exists = self.user_repository.get_user_by_username(username)
+            if user_username_exists and user_username_exists.id != user.id:
                 return {'success': False, 'message': 'Username already exists'}
-            
-            if self.user_repository.get_user_by_email(email):
+
+            user_email_exists = self.user_repository.get_user_by_email(email)
+            if user_email_exists and user_email_exists.id != user.id:
                 return {'success': False, 'message': 'Email already exists'}
-            
+
             if timezone not in pytz.all_timezones:
                 return {'success': False, 'message': 'Invalid timezone'}
-            
-            if username:
+
+            if username != user.username:
                 success = self.user_repository.update_username(user_id=user_id, username=username)
                 if not success:
                     return {
                         'success': False,
-                        'error': 'Username already exists'
+                        'error': 'Username update failed'
                     }
-            
-            if email:
+
+            if email != user.email:
                 success = self.user_repository.update_email(user_id=user_id, email=email)
                 if not success:
                     return {
                         'success': False,
-                        'error': 'Email already exists'
+                        'error': 'Email update failed'
                     }
 
-            if timezone:
+            if timezone != user.timezone:
                 success = self.user_repository.update_timezone(user_id=user_id, timezone=timezone)
                 if not success:
                     return {
                         'success': False,
-                        'error': 'Invalid timezone'
+                        'error': 'Timezone update failed'
                     }
-                
+
             Security.clear_device_cookies()
             self.tokens_repository.revoke_old_tokens_for_device(user_id, device_id)
             Security.generate_token(user_id, device_id)
-            
+
             return {
                 'success': True,
                 'message': 'Profile updated successfully'
             }
+
         except Exception as ex:
             Logger.add_to_log("error", str(ex))
             Logger.add_to_log("error", traceback.format_exc())
             return {
                 'success': False,
-                'error': INTERNAL_SERVER_ERROR
+                'error': "Internal server error"
             }
