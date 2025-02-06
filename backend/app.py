@@ -29,7 +29,7 @@ def create_app():
         app,
         resources={r"/*": {
             "origins": ["http://localhost:3000", "http://192.168.18.118:3000"],
-            "methods": ["GET", "POST", "PUT", "DELETE"],
+            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
             "supports_credentials": True,
             "allow_headers": ["Authorization", "Content-Type"],
         }},
@@ -56,12 +56,10 @@ def create_app():
         print("Verificando la conexión a la base de datos y modelos registrados...")
 
         try:
-            # Verificar qué modelos están registrados
             print("\nModelos registrados en SQLAlchemy:")
             for clase in [User, Journal, Interactions]:
                 print(f"- {clase.__name__}: {clase.__tablename__}")
 
-            # Verificar tablas existentes en la base de datos
             inspector = db.inspect(db.engine)
             existing_tables = inspector.get_table_names()
             
@@ -71,11 +69,9 @@ def create_app():
 
             if not existing_tables:
                 print("\nNo se encontraron tablas. Procediendo a la creación...")
-                # Crear todas las tablas
                 db.create_all()
                 db.session.commit()
                 
-                # Verificar las tablas creadas
                 inspector = db.inspect(db.engine)
                 created_tables = inspector.get_table_names()
                 print("\nTablas creadas:")
@@ -117,4 +113,4 @@ def create_app():
 
 if __name__ == "__main__":
     app, socketio = create_app()
-    socketio.run(app, host="localhost", port=5000, debug=True, log_output=True)
+    socketio.run(app, host="localhost", port=5000, debug=False, log_output=True)

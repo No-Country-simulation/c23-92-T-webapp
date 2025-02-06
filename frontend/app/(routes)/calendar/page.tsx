@@ -15,6 +15,9 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Navbar } from "@/components/navbar/Navbar";
 import socket from "@/lib/socket";
+import { verifyToken } from "@/lib/auth";
+import { handleTokenRefresh } from "@/lib/api";
+import { Loading } from "@/components/loading";
 
 type DayData = {
   mood: keyof typeof moodColors;
@@ -70,6 +73,8 @@ interface Interactions {
 export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [isLoading, setIsLoading] = useState(true);
+  
 
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear();
@@ -99,6 +104,34 @@ export default function CalendarPage() {
       console.log(data);
     });
   }
+
+  useEffect(() => {
+      const checkAuth = async () => {
+        try {
+          let isValidToken = await verifyToken();
+          if (!isValidToken) {
+            const refreshSuccess = await handleTokenRefresh();
+            if (!refreshSuccess) {
+              window.location.href = "/login";
+              return;
+            }
+  
+            isValidToken = await verifyToken();
+            if (!isValidToken) throw new Error("Token verification failed");
+          }
+        } catch (error) {
+          window.location.href = "/login";
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      checkAuth();
+    }, []);
+  
+    if (isLoading) {
+      return <Loading />;
+    }
+  
 
   return (
     <div className="min-h-screen bg-background pt-20 pb-24">

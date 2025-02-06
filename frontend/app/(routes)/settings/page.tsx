@@ -25,6 +25,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Navbar } from "@/components/navbar/Navbar";
+import { verifyToken } from "@/lib/auth";
+import { handleTokenRefresh } from "@/lib/api";
+import { Loading } from "@/components/loading";
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
@@ -32,10 +35,35 @@ export default function SettingsPage() {
   const [notifications, setNotifications] = useState(true);
   const [reminderTime, setReminderTime] = useState("21:00");
   const [language, setLanguage] = useState("es");
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        let isValidToken = await verifyToken();
+        if (!isValidToken) {
+          const refreshSuccess = await handleTokenRefresh();
+          if (!refreshSuccess) {
+            window.location.href = "/login";
+            return;
+          }
+
+          isValidToken = await verifyToken();
+          if (!isValidToken) throw new Error("Token verification failed");
+        }
+      } catch (error) {
+        window.location.href = "/login";
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    checkAuth();
     setMounted(true);
   }, []);
+
+  if (isLoading) {
+    return <Loading />;
+  }
 
   const settingsSections = [
     {
@@ -121,21 +149,7 @@ export default function SettingsPage() {
           ),
         },
       ],
-    },
-    {
-      title: "Tu cuenta",
-      items: [
-        {
-          icon: Trash2,
-          label: "Eliminar cuenta",
-          component: (
-            <Button variant="destructive" size="sm">
-              Eliminar
-            </Button>
-          ),
-        },
-      ],
-    },
+    }
   ];
 
   if (!mounted) {

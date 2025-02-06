@@ -87,11 +87,12 @@ def logout(user_id, device_id):
             'message': 'Logout failed'
         }), 500
     
-@auth_routes.route('/update-password', methods=['POST'])
+@auth_routes.route('/update-password', methods=['PUT'])
 @AuthMiddleware.require_auth
 def update_password(user_id, device_id):
     try:
         data = request.get_json()
+        Logger.add_to_log("info", f"Received data: {data}")  # Log de depuración
 
         if not data:
             return jsonify({'success': False, 'message': 'No data provided'}), 400
@@ -99,8 +100,13 @@ def update_password(user_id, device_id):
         current_password = data.get('current_password')
         new_password = data.get('new_password')
 
-        response = auth_service.change_password(user_id, current_password, new_password)
+        Logger.add_to_log("info", f"Current password received: {current_password}")  # Log de depuración
+        Logger.add_to_log("info", f"New password received: {new_password}")  # Log de depuración
 
+        if not current_password or not new_password:
+            return jsonify({'success': False, 'message': 'Both current_password and new_password are required'}), 400
+
+        response = auth_service.change_password(user_id, current_password, new_password)
         if 'success' in response and response['success']:
             return jsonify(response), 200
         else:
@@ -127,7 +133,7 @@ def get_user(user_id, device_id):
         Logger.add_to_log("error", traceback.format_exc())
         return jsonify({'success': False, 'message': "Internal server error"}), 500
     
-@auth_routes.route('/update-profile', methods=['POST'])
+@auth_routes.route('/update-profile', methods=['PUT'])
 @AuthMiddleware.require_auth
 def update_profile(user_id, device_id):
     try:

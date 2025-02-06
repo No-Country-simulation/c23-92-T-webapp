@@ -4,6 +4,9 @@ import JournalList, { Journal } from "@/components/JournalList";
 import InteractionCard from "@/components/InteractionCard";
 import formatDate from "@/lib/formatDate";
 import socket from "@/lib/socket";
+import { Loading } from "@/components/loading";
+import { verifyToken } from "@/lib/auth";
+import { handleTokenRefresh } from "@/lib/api";
 
 async function fetchJournals(): Promise<Journal[]> {
     return new Promise((resolve, reject) => {
@@ -31,6 +34,28 @@ export default function JournalPage() {
 
 
     useEffect(() => {
+        const checkAuth = async () => {
+            try {
+                let isValidToken = await verifyToken();
+                if (!isValidToken) {
+                    const refreshSuccess = await handleTokenRefresh();
+                    if (!refreshSuccess) {
+                        window.location.href = "/login";
+                        return;
+                    }
+
+                    isValidToken = await verifyToken();
+                    if (!isValidToken) throw new Error("Token verification failed");
+                }
+            } catch (error) {
+                window.location.href = "/login";
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        checkAuth();
+
         async function loadJournals() {
             try {
                 const data = await fetchJournals();
@@ -42,8 +67,6 @@ export default function JournalPage() {
                     );
                     setJournals(sortedJournals);
                     setSelectedJournal(sortedJournals[0]);
-                } else {
-                    setError("No se encontraron journals.");
                 }
             } catch (err) {
                 setError("Ocurrió un error al cargar los journals.");
@@ -57,9 +80,12 @@ export default function JournalPage() {
 
     if (loading) {
         return (
-            <div className="flex min-h-screen justify-center items-center">
-                <p className="text-muted-foreground">Cargando journals...</p>
-            </div>
+            <>
+                <div className="flex min-h-screen justify-center items-center">
+                    <p className="text-muted-foreground">Cargando journals...</p>
+                </div>
+                <Loading />
+            </>
         );
     }
 

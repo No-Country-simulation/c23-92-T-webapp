@@ -19,7 +19,11 @@ const EmotionsComponent = () => {
         socket.emit("get_mood_evolution");
         socket.on("mood_evolution_data", (response: EmotionEvolutionChartData) => {
             if (response.success) {
-                setData(response.data);
+                if (response.data && response.data.length > 0) {
+                    setData(response.data);
+                } else {
+                    setError("No hay datos disponibles.");
+                }
             } else {
                 setError(response.error ?? "Error al obtener los datos de evolución del estado de ánimo.");
             }
