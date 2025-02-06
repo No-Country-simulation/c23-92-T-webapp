@@ -4,6 +4,7 @@ import { verifyToken } from "@/lib/auth";
 import { handleTokenRefresh } from "@/lib/api";
 import { Loading } from "@/components/loading";
 import EmotionsComponent from "@/components/EmotionsComponent";
+import Calendar from "@/components/dashboard/calendar";
 
 export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
@@ -40,7 +41,7 @@ export default function DashboardPage() {
       <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
 
       {/* Grid for larger screens, flex column for smaller screens */}
-      <div className="flex flex-col lg:grid lg:grid-cols-[3fr_2fr] gap-4 lg:gap-6">
+      <div className="flex flex-col xl:grid xl:grid-cols-[3fr_2fr] gap-4 lg:gap-6">
 
         {/* Left Column */}
         <div className="flex flex-col gap-4">
@@ -72,8 +73,8 @@ export default function DashboardPage() {
             {/* recents interactions card */}
           </div>
           
-          <div className="h-48 sm:h-72 bg-[--color-white] border shadow-lg p-4 rounded-lg">
-            <p className="text-lg font-bold my-3 ps-5">Calendario</p>
+          <div className="rounded-lg">
+          <Calendar />
           </div>
         </div>
 
