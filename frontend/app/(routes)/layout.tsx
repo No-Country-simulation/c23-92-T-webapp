@@ -33,7 +33,7 @@ export default function RootLayout({
       >
         <ThemeProvider attribute="class" defaultTheme="system">
           <DeviceDetector>
-            <div className="flex relative min-h-screen m-auto 
+            <div className="flex relative max-w-screen-2xl min-h-screen m-auto 
                     bg-[#F6F4FA]
                     rounded-3xl">
               {/* Mostrar Sidebar solo en escritorio */}
