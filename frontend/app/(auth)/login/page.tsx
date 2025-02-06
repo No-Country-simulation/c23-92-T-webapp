@@ -48,7 +48,6 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Implementar lógica de login
     setError(null);
     try {
       const response = await login(username, password);

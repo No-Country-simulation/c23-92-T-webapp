@@ -41,7 +41,7 @@ export async function logout() {
         throw new Error(response.message ?? "Logout failed");
     }
 
-    return response.data;
+    return response;
 }
 
 export async function getProfile() {
@@ -51,27 +51,41 @@ export async function getProfile() {
         throw new Error(response.message ?? "Error fetching profile data");
     }
 
-    return response.data;
+    return response;
 }
 
 export async function updateProfile(profile: { username: string; email: string; timezone: string }) {
-    const response = await apiRequest("/auth/update-user", "PUT", profile);
-
-    if (!response.success) {
-        throw new Error(response.message ?? "Error updating profile");
+    try {
+        const response = await apiRequest("/auth/update-profile", "PUT", profile);
+        if (!response.success) {
+            throw new Error(response.message ?? "Error updating profile");
+        }
+        return response;
+    } catch (error) {
+        console.error("Error updating profile:", error);
+        throw error;
     }
-
-    return response.data;
 }
 
-export async function changePassword(currentPassword: string, newPassword: string) {
-    const response = await apiRequest("/auth/change-password", "POST", { currentPassword, newPassword });
-
-    if (!response.success) {
-        throw new Error(response.message ?? "Error changing password");
+export async function changePassword(data: { current_password: string; new_password: string }) {
+    if (!data.current_password || !data.new_password) {
+        throw new Error("Both current password and new password are required");
     }
 
-    return response.data;
+    try {
+        const response = await apiRequest("/auth/update-password", "PUT", {
+            current_password: data.current_password,
+            new_password: data.new_password,
+        });
+
+        if (!response.success) {
+            throw new Error(response.message ?? "Error changing password");
+        }
+        return response;
+    } catch (error) {
+        console.error("Error changing password:", error);
+        throw error;
+    }
 }
 
 export async function deleteAccount() {
@@ -81,5 +95,5 @@ export async function deleteAccount() {
         throw new Error(response.message ?? "Error deleting account");
     }
 
-    return response.data;
+    return response;
 }

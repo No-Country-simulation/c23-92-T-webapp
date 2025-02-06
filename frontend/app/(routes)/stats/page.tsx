@@ -19,6 +19,8 @@ import { format, parseISO, isValid } from "date-fns";
 import { es } from "date-fns/locale";
 import EmotionCloudChart, { WordCloudData } from "@/components/charts/EmotionCloudChart";
 import EmotionsComponent from "@/components/EmotionsComponent";
+import { verifyToken } from "@/lib/auth";
+import { handleTokenRefresh } from "@/lib/api";
 
 interface MoodDayData {
   date: string;
@@ -105,6 +107,7 @@ export default function StatsPage() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const getMostCommonMood = (data: EmotionPieChartData) => {
     const { mood_proportions } = data;
@@ -118,7 +121,7 @@ export default function StatsPage() {
         maxProportion = proportion;
         if (mostCommonMood === 'Feliz') {
           mostCommonMood = '😊';
-        } else if (mostCommonMood === 'Neutral') {
+        } else if (mostCommonMood === 'Normal') {
           mostCommonMood = '😐';
         } else if (mostCommonMood === 'Triste') {
           mostCommonMood = '😔';
@@ -132,6 +135,27 @@ export default function StatsPage() {
   };
 
   useEffect(() => {
+    const checkAuth = async () => {
+          try {
+            let isValidToken = await verifyToken();
+            if (!isValidToken) {
+              const refreshSuccess = await handleTokenRefresh();
+              if (!refreshSuccess) {
+                window.location.href = "/login";
+                return;
+              }
+    
+              isValidToken = await verifyToken();
+              if (!isValidToken) throw new Error("Token verification failed");
+            }
+          } catch (error) {
+            window.location.href = "/login";
+          } finally {
+            setIsLoading(false);
+          }
+        };
+      checkAuth();
+
     socket.emit("get_mood_proportions");
     socket.on("mood_proportions_data", (response: EmotionPieChartData) => {
       if (response.success) {
@@ -261,6 +285,10 @@ export default function StatsPage() {
     return null;
   };
 
+  if (isLoading) {
+    return <Loading />;
+  }
+
   return (
     <div className="min-h-screen bg-background pt-20 pb-24">
       <Navbar />
@@ -297,7 +325,7 @@ export default function StatsPage() {
                 <CardContent className="p-6">
                   <div className="space-y-2">
                     <p className="text-sm text-muted-foreground">Estado más común</p>
-                    <p className="text-2xl font-bold">{commonMood}</p>
+                    <p className="text-2xl font-bold">{commonMood ?? 'No tienes un estado común por el momento'}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -306,7 +334,7 @@ export default function StatsPage() {
                   <div className="space-y-2">
                     <p className="text-sm text-muted-foreground">Día más feliz 😊</p>
                     <p className="text-xl font-bold">
-                      {happiestDay ?? "No disponible"}
+                      {happiestDay ?? "No tienes un día más feliz por el momento"}
                     </p>
                   </div>
                 </CardContent>
@@ -315,7 +343,7 @@ export default function StatsPage() {
                 <CardContent className="p-6">
                   <div className="space-y-2">
                     <p className="text-sm text-muted-foreground">Total interacciones</p>
-                    <p className="text-xl font-bold">{totalInteractions}</p>
+                    <p className="text-xl font-bold">{totalInteractions ?? "No tienes interacciones hechas por el momento"}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -324,7 +352,7 @@ export default function StatsPage() {
                   <div className="space-y-2">
                     <p className="text-sm text-muted-foreground">Día más triste 😔</p>
                     <p className="text-xl font-bold">
-                      {saddestDay ?? "No disponible"}
+                      {saddestDay ?? "No tienes un día más triste por el momento"}
                     </p>
                   </div>
                 </CardContent>
@@ -351,7 +379,7 @@ export default function StatsPage() {
 
                   {/* Contenedor de palabras */}
                   <div className="flex flex-wrap items-center justify-center gap-3">
-                    {cloudData?.positive_words ? (
+                    {cloudData?.positive_words && Object.keys(cloudData.positive_words).length > 0 ? (
                       Object.entries(cloudData.positive_words).map(([word], index) => (
                         <motion.div
                           key={word}
@@ -378,7 +406,7 @@ export default function StatsPage() {
 
                   {/* Contenedor de palabras */}
                   <div className="flex flex-wrap items-center justify-center gap-3">
-                    {cloudData?.negative_words ? (
+                    {cloudData?.negative_words && Object.keys(cloudData.negative_words).length > 0 ? (
                       Object.entries(cloudData.negative_words).map(([word], index) => (
                         <motion.div
                           key={word}
@@ -422,7 +450,7 @@ export default function StatsPage() {
                 <CardContent className="p-6">
                   <div className="space-y-2">
                     <p className="text-sm text-muted-foreground">Estado más común de la semana</p>
-                    <p className="text-2xl font-bold">{weekCommonMood}</p>
+                    <p className="text-2xl font-bold">{weekCommonMood ?? "No tienes estado más común de la semana por el momento"}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -431,7 +459,7 @@ export default function StatsPage() {
                   <div className="space-y-2">
                     <p className="text-sm text-muted-foreground">Día más feliz de la semana😊</p>
                     <p className="text-xl font-bold">
-                      {happiestDayOfWeek ?? "No disponible"}
+                      {happiestDayOfWeek ?? "No tienes un día más feliz de la semana por el momento"}
                     </p>
                   </div>
                 </CardContent>
@@ -440,7 +468,7 @@ export default function StatsPage() {
                 <CardContent className="p-6">
                   <div className="space-y-2">
                     <p className="text-sm text-muted-foreground">Total de interacciones de la semana</p>
-                    <p className="text-xl font-bold">{weekTotalInteractions}</p>
+                    <p className="text-xl font-bold">{weekTotalInteractions ?? "No has hecho interacciones por el momento"}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -449,7 +477,7 @@ export default function StatsPage() {
                   <div className="space-y-2">
                     <p className="text-sm text-muted-foreground">Día más triste de la semana😔</p>
                     <p className="text-xl font-bold">
-                      {saddestDayOfWeek ?? "No disponible"}
+                      {saddestDayOfWeek ?? "No tienes un día más triste de la semana por el momento"}
                     </p>
                   </div>
                 </CardContent>
@@ -473,11 +501,11 @@ export default function StatsPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <p className="text-sm text-muted-foreground">Promedio de interacciones por semana del mes</p>
-                    <p className="text-2xl font-bold">{averageInteractionsPerWeek}</p>
+                    <p className="text-2xl font-bold">{averageInteractionsPerWeek ?? "No has hecho interacciones durante el mes"}</p>
                   </div>
                   <div className="space-y-2">
                     <p className="text-sm text-muted-foreground">Cantidad de semanas con interacciones del mes</p>
-                    <p className="text-2xl font-bold">{weeksWithInteractions}</p>
+                    <p className="text-2xl font-bold">{weeksWithInteractions ?? "No has hecho interacciones durante las semanas de este mes"}</p>
                   </div>
                 </div>
                 <div className="space-y-4">
@@ -515,7 +543,7 @@ export default function StatsPage() {
                 <CardContent className="p-6">
                   <div className="space-y-2">
                     <p className="text-sm text-muted-foreground">Estado más común del mes</p>
-                    <p className="text-2xl font-bold">{monthCommonMood}</p>
+                    <p className="text-2xl font-bold">{monthCommonMood ?? "No tienes un estado más común del mes"}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -524,7 +552,7 @@ export default function StatsPage() {
                   <div className="space-y-2">
                     <p className="text-sm text-muted-foreground">Día más feliz del mes😊</p>
                     <p className="text-xl font-bold">
-                      {happiestDayOfMonth ?? "No disponible"}
+                      {happiestDayOfMonth ?? "No tienes un día más feliz del mes"}
                     </p>
                   </div>
                 </CardContent>
@@ -533,7 +561,7 @@ export default function StatsPage() {
                 <CardContent className="p-6">
                   <div className="space-y-2">
                     <p className="text-sm text-muted-foreground">Total de interacciones del mes</p>
-                    <p className="text-xl font-bold">{monthTotalInteractions}</p>
+                    <p className="text-xl font-bold">{monthTotalInteractions ?? "No has hecho interacciones este mes"}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -542,7 +570,7 @@ export default function StatsPage() {
                   <div className="space-y-2">
                     <p className="text-sm text-muted-foreground">Día más triste del mes😔</p>
                     <p className="text-xl font-bold">
-                      {saddestDayOfMonth ?? "No disponible"}
+                      {saddestDayOfMonth ?? "No tienes un día más triste del mes"}
                     </p>
                   </div>
                 </CardContent>
