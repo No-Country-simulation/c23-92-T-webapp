@@ -1,3 +1,6 @@
+import eventlet
+eventlet.monkey_patch()
+
 from flask import Flask, jsonify
 from src.routes.AuthRoutes import auth_routes
 from src.routes.OpenAiRoutes import interactions_bp
@@ -15,6 +18,7 @@ import os
 from src.models.Interactions import Interactions
 from src.models.User import User
 from src.models.Journal import Journal
+
 
 load_dotenv()
 
@@ -107,4 +111,4 @@ def create_app():
 
 if __name__ == "__main__":
     app, socketio = create_app()
-    socketio.run(app, host="localhost", port=5000, debug=False, log_output=True)
+    socketio.run(app, host="0.0.0.0", port=5000, debug=False, allow_unsafe_werkzeug=True)
