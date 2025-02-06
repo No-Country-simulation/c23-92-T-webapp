@@ -15,7 +15,7 @@ export function CreateEntryButton() {
         stiffness: 260,
         damping: 20,
       }}
-      className="fixed bottom-20 right-4 md:right-[calc(50%-22rem)] z-50"
+      className="fixed bottom-4 right-4 z-50"
     >
       <Link href="/journal/new">
         <button
