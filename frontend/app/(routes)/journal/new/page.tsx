@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,9 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 import socket from "@/lib/socket"; // Importa el cliente de Socket.IO
 import { useJournalStore } from "@/lib/stores/journal-store";
+import { verifyToken } from "@/lib/auth";
+import { handleTokenRefresh } from "@/lib/api";
+import { Loading } from "@/components/loading";
 
 
 const getMoodButtonClass = (moodId: MoodType, isSelected: boolean) => {
@@ -35,6 +38,33 @@ export default function NewJournalPage() {
   const [selectedMood, setSelectedMood] = useState<MoodType | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const setCurrentEntry = useJournalStore((state) => state.setCurrentEntry);
+
+    useEffect(() => {
+      const checkAuth = async () => {
+        try {
+          let isValidToken = await verifyToken();
+          if (!isValidToken) {
+            const refreshSuccess = await handleTokenRefresh();
+            if (!refreshSuccess) {
+              window.location.href = "/login";
+              return;
+            }
+  
+            isValidToken = await verifyToken();
+            if (!isValidToken) throw new Error("Token verification failed");
+          }
+        } catch (error) {
+          window.location.href = "/login";
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      checkAuth();
+    }, []);
+  
+    if (isLoading) {
+      return <Loading />;
+    }
 
   const handleSubmit = async () => {
     if (!selectedMood || !content) return;

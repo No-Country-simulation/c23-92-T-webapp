@@ -4,18 +4,42 @@ import { useRouter } from "next/navigation";
 import { IAFeedbackCard } from "@/components/ia-feedback-card";
 import { useJournalStore } from "@/lib/stores/journal-store";
 import socket, { InteractionResponse } from "@/lib/socket";
+import { Loading } from "@/components/loading";
+import { verifyToken } from "@/lib/auth";
+import { handleTokenRefresh } from "@/lib/api";
 
 export default function IAFeedbackPage() {
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const currentEntry = useJournalStore((state) => state.currentEntry);
   const clearCurrentEntry = useJournalStore((state) => state.clearCurrentEntry);
-
   const [responseData, setResponseData] = useState<{
     title: string;
     iaFeedback: string;
   } | null>(null);
 
   useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        let isValidToken = await verifyToken();
+        if (!isValidToken) {
+          const refreshSuccess = await handleTokenRefresh();
+          if (!refreshSuccess) {
+            window.location.href = "/login";
+            return;
+          }
+          isValidToken = await verifyToken();
+          if (!isValidToken) throw new Error("Token verification failed");
+        }
+      } catch (error) {
+        window.location.href = "/login";
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
+
     if (!currentEntry) return;
 
     const handleInteractionResponse = (response: InteractionResponse) => {
@@ -40,6 +64,10 @@ export default function IAFeedbackPage() {
     clearCurrentEntry();
     router.push("/dashboard");
   };
+
+  if (isLoading) {
+    return <Loading />;
+  }
 
   if (!currentEntry) {
     return (
