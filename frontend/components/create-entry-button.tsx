@@ -28,7 +28,7 @@ export function CreateEntryButton() {
             "backdrop-blur-sm"
           )}
         >
-          <Plus className="w-6 h-6" />
+          <Plus className="w-10 h-10" />
         </button>
       </Link>
     </motion.div>

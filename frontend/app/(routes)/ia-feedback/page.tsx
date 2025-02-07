@@ -62,7 +62,7 @@ export default function IAFeedbackPage() {
 
   const handleContinue = () => {
     clearCurrentEntry();
-    router.push("/dashboard");
+    router.push("/diaries");
   };
 
   if (isLoading) {

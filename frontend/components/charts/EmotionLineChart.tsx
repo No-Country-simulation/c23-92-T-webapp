@@ -68,8 +68,8 @@ const EmotionLineChart: React.FC<EmotionLineChartProps> = ({ data }) => {
                         // tickLabelStyle: { fill: "#ffffff" }, // Color de las etiquetas del eje Y
                     },
                 ]}
-                width={750} // Ancho fijo (ajustable)
-                height={300} // Alto fijo (ajustable)
+                width={650} // Ancho fijo (ajustable)
+                height={270} // Alto fijo (ajustable)
                 // sx={{
                 //     backgroundColor: "#121212", // Fondo oscuro para el gráfico
                 // }}
