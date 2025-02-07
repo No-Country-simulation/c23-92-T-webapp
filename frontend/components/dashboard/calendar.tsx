@@ -53,7 +53,7 @@ export default function Calendar() {
   };
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader className='flex flex-row items-center justify-between pb-4'>
         <CardTitle className='text-xl font-bold'>
           {currentMonth.toLocaleString('es-ES', { month: 'long', year: 'numeric' })}
