@@ -1,8 +1,6 @@
 import { io } from "socket.io-client";
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5000/api";
 
-
-const socket = io(API_BASE_URL, {
+const socket = io("https://c23-92-t-webapp-production.up.railway.app", {
     withCredentials: true,
     transports: ['websocket']
 });
@@ -15,13 +13,12 @@ socket.on("disconnect", () => {
     console.log("Desconectado del servidor de Socket.IO");
 });
 
-// src/types/socket.ts
 export interface InteractionResponse {
     success: boolean;
-    title?: string; // Título opcional
-    response?: string; // Respuesta completa (opcional)
+    title?: string;
+    response?: string;
     type: "success" | "error"
-    error?: string; // Mensaje de error (opcional)
+    error?: string;
 }
 
 export default socket;
