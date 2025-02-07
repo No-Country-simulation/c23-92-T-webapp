@@ -6,6 +6,8 @@ import { Loading } from "@/components/loading";
 import EmotionsComponent from "@/components/EmotionsComponent";
 import Calendar from "@/components/dashboard/calendar";
 import SubscriptionInvite from "@/components/dashboard/subscription";
+import Interactions from "@/components/dashboard/interactions";
+import Streak from "@/components/dashboard/streak";
 
 export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
@@ -55,9 +57,8 @@ export default function DashboardPage() {
 
           {/* Two Cards in a Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 auto-rows-fr">
-            <div className="h-full flex flex-col bg-[--color-white] border shadow-lg p-4 rounded-lg">
               {/* Card content */}
-            </div>
+              <Streak />
             <div className="h-full flex flex-col">
               <SubscriptionInvite />
             </div>
@@ -70,8 +71,11 @@ export default function DashboardPage() {
 
           {/* Recent Interactions */}
           <div className="flex flex-col flex-1 bg-[--color-white] border shadow-lg p-4 rounded-lg">
-            <p className="text-lg font-bold my-3 ps-5">Recientes</p>
+            <p className="text-lg font-bold my-3 ps-5">Reciente</p>
             {/* Recent interactions card */}
+            <div className="space-y-2">
+            <Interactions/>
+        </div>
           </div>
           
           {/* Calendar fills remaining space */}
