@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, render_template
 from src.services.OpenAiService import OpenAIService
 from src.repositories.JournalsRepository import JournalsRepository
 from src.services.InteractionsService import InteractionsService
@@ -8,10 +8,13 @@ from src.middlewares.AuthMiddleware import AuthMiddleware
 from openai import OpenAI
 import os
 from dotenv import load_dotenv
+from flask_socketio import SocketIO, emit
+from extensions import socketio
 
-interactions_bp = Blueprint('interactions', __name__, url_prefix='/api/interactions')
 
 load_dotenv()
+
+interactions_bp = Blueprint('interactions', __name__, url_prefix='/api/interactions')
 
 client = OpenAI(
         api_key=os.getenv("OPENAI_API_KEY")
@@ -43,25 +46,22 @@ def debug_headers():
             response["error"] = "Error al extraer el token del header"
     return jsonify(response)
 
-@interactions_bp.route('/create', methods=['POST'])
+
 @AuthMiddleware.require_auth
 @AuthMiddleware.validate_request_data(["content", "state"])
 def create_interaction(user_id, device_id):
     try:
-        data = request.get_json()
-
         content = data.get("content")
         state = data.get("state")
 
-        print(content, state)
-
+        # trilce
         if not content:
             return jsonify({
                 "success": False,
                 "message": "Content is required"
             }), 400
 
-        response = openai_service.response(user_id, state, content)
+        # response = openai_service.response(user_id, state, content)
 
         if response['success'] == False:
             return response, 500

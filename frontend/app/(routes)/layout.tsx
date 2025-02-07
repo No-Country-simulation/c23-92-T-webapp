@@ -5,6 +5,7 @@ import Sidebar from "@/components/navigation/sidebar";
 import { ThemeProvider } from "@/components/theme-provider";
 import { BottomNav } from "@/components/navigation/bottom-nav";
 import DeviceDetector from "@/lib/hooks/DeviceDetector";
+import { CreateEntryButton } from "@/components/create-entry-button";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,20 +29,24 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased p-10`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ThemeProvider attribute="class" defaultTheme="system">
           <DeviceDetector>
-            <div className="flex relative min-h-screen max-w-screen-xl m-auto bg-[#F6F4FA] rounded-3xl">
+            <div className="flex relative max-w-screen-2xl min-h-screen m-auto 
+                    bg-[#F6F4FA]
+                    rounded-3xl">
               {/* Mostrar Sidebar solo en escritorio */}
               <aside className="relative hidden-if-mobile">
                 <Sidebar />
               </aside>
 
               {/* Contenido principal */}
-              <main className="flex-1 p-6 data-[is-mobile=true]:ms-0">
+              <main className="flex-1 ps-28 py-12 pe-6 h-full data-[is-mobile=true]:ms-0">
                 {children}
               </main>
+
+              <CreateEntryButton />
 
               {/* Mostrar BottomNav solo en móviles */}
               <BottomNav className="block-if-mobile" />
