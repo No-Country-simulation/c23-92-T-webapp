@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import EmotionLineChart, { EmotionData } from "./charts/EmotionLineChart";
 import socket from "@/lib/socket";
+import { Skeleton, Alert, Typography } from "@mui/material";
 
 interface EmotionEvolutionChartData {
     success: boolean;
@@ -36,22 +37,36 @@ const EmotionsComponent = () => {
     }, []);
 
     if (loading) {
-        return <p className="text-center text-gray-500">Cargando datos...</p>;
+        // Mostrar esqueletos mientras se cargan los datos
+        return (
+            <div className="w-full h-full flex flex-col justify-center items-center">
+                <Typography variant="h5" gutterBottom>
+                    Cargando datos...
+                </Typography>
+                <Skeleton variant="rectangular" width={600} height={400} animation="wave" />
+            </div>
+        );
     }
 
     if (error) {
-        return <p className="text-center text-red-500">{error}</p>;
+        return (
+            <div className="w-full h-full flex flex-col justify-center items-center">
+                <Alert severity="error">{error}</Alert>
+            </div>
+        );
     }
 
     return (
         <div className="w-full h-full flex flex-col justify-center items-center">
-            <h1 className="text-xl font-bold mb-4">Gráfico de Emociones</h1>
+            <Typography variant="h4" className="font-bold mb-4">
+                Gráfico de Emociones
+            </Typography>
             {data.length > 0 ? (
                 <div className="w-full h-full">
                     <EmotionLineChart data={data} />
                 </div>
             ) : (
-                <p className="text-center text-gray-500">No hay datos disponibles.</p>
+                <Alert severity="info">No hay datos disponibles para mostrar.</Alert>
             )}
         </div>
     );

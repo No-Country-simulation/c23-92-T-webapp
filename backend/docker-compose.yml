@@ -1,0 +1,11 @@
+services:
+  app:
+    build: .
+    env_file:
+      - ../.env
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+      - ./logs:/app/src/utils/log  # Monta el directorio de logs en tu máquina local
+    command: python app.py
