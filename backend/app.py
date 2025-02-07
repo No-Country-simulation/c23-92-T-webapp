@@ -26,7 +26,7 @@ def create_app():
     CORS(
         app,
         resources={r"/*": {
-            "origins": ["http://localhost:3000", "http://192.168.18.118:3000"],
+            "origins": ["http://localhost:3000", "http://192.168.18.118:3000", "https://c23-92-t-webapp-taupe.vercel.app"],
             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
             "supports_credentials": True,
             "allow_headers": ["Authorization", "Content-Type"],
