@@ -1,6 +1,6 @@
 import { io } from "socket.io-client";
 
-const socket = io("http://localhost:5000", {
+const socket = io("https://c23-92-t-webapp-production.up.railway.app", {
     withCredentials: true,
     transports: ['websocket']
 });

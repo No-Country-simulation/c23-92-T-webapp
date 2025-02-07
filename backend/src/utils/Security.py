@@ -73,7 +73,7 @@ class Security():
             name,
             value=signed_value,
             httponly=True,
-            secure=False,
+            secure=True,
             samesite='Lax',
             max_age=max_age,
         )
@@ -120,7 +120,7 @@ class Security():
             'device_id',
             value=device_id,
             httponly=True,
-            secure=False,
+            secure=True,
             samesite='Lax',
             max_age=30 * 24 * 60 * 60 # 30 days
         )
@@ -139,7 +139,7 @@ class Security():
         active_devices = cls.tokens_service.count_active_devices_by_user(user_id)
 
         if active_devices >= cls.MAX_DEVICES:
-            Logger.add_to_log("warning", f"User {user_id} has reached maximum device limit ({cls.MAX_DEVICES})")
+            Logger.add_to_log("warn", f"User {user_id} has reached maximum device limit ({cls.MAX_DEVICES})")
 
             remove = cls.remove_oldest_device(user_id)
             if not remove['success']:
