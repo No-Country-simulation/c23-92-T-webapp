@@ -14,7 +14,6 @@ from extensions import db, socketio
 from flask_cors import CORS
 import os
 
-# Importar todos los modelos
 from src.models.Interactions import Interactions
 from src.models.User import User
 from src.models.Journal import Journal
