@@ -1,6 +1,8 @@
 import { io } from "socket.io-client";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5000/api";
 
-const socket = io("https://c23-92-t-webapp-production.up.railway.app", {
+
+const socket = io(API_BASE_URL, {
     withCredentials: true,
     transports: ['websocket']
 });

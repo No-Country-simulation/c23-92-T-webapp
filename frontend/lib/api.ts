@@ -1,5 +1,5 @@
 // En /lib/api.ts
-const API_BASE_URL = "https://c23-92-t-webapp-production.up.railway.app/api";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5000/api";
 
 interface ApiResponse {
   success: boolean;
