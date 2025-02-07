@@ -74,7 +74,7 @@ class Security():
             value=signed_value,
             httponly=True,
             secure=True,
-            samesite='Lax',
+            samesite='None',
             max_age=max_age,
         )
 
@@ -121,7 +121,7 @@ class Security():
             value=device_id,
             httponly=True,
             secure=True,
-            samesite='Lax',
+            samesite='None',
             max_age=30 * 24 * 60 * 60 # 30 days
         )
 
