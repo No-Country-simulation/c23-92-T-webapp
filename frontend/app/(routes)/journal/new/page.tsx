@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import { useJournalStore } from "@/lib/stores/journal-store";
 import { verifyToken } from "@/lib/auth";
 import { handleTokenRefresh } from "@/lib/api";
 import { Loading } from "@/components/loading";
+
 
 
 const getMoodButtonClass = (moodId: MoodType, isSelected: boolean) => {
@@ -33,6 +34,9 @@ const getMoodButtonClass = (moodId: MoodType, isSelected: boolean) => {
 };
 
 export default function NewJournalPage() {
+
+  // editor
+ 
   const router = useRouter();
   const [content, setContent] = useState("");
   const [selectedMood, setSelectedMood] = useState<MoodType | null>(null);
@@ -93,6 +97,9 @@ export default function NewJournalPage() {
   return (
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-2xl mx-auto">
+
+        {/* editor */}
+
         <Card className="border-none shadow-none">
           <CardHeader className="space-y-6">
             <div className="flex items-center gap-4">
