@@ -18,9 +18,9 @@ const EmotionLineChart: React.FC<EmotionLineChartProps> = ({ data }) => {
     const normalValues = data.map((item) => item.Normal ?? null); // Valores para "Normal"
     const tristeValues = data.map((item) => item.Triste ?? null); // Valores para "Triste"
     const enojadoValues = data.map((item) => item.Enojado ?? null); // Valores para "Enojado"
-
+    
     return (
-        <div className="w-full h-full">
+        <div className="h-full">
             <LineChart
                 xAxis={[
                     {

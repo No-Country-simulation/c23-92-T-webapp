@@ -11,7 +11,7 @@ const Sidebar = () => {
   return (
     <nav
       className="
-        fixed top-1/2 left-4
+        absolute top-1/2 left-4
         transform -translate-y-1/2
         h-auto w-fit px-3 py-8
         bg-[--color-lila] text-[--color-white]
